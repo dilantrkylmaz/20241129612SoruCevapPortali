@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "20241129612SoruCevapPortalı", "20241129612SoruCevapPortalı\20241129612SoruCevapPortalı.csproj", "{3F82E39D-C623-4EF0-AB44-913C32EF317A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F82E39D-C623-4EF0-AB44-913C32EF317A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F82E39D-C623-4EF0-AB44-913C32EF317A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F82E39D-C623-4EF0-AB44-913C32EF317A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F82E39D-C623-4EF0-AB44-913C32EF317A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {95DDEA41-DD6C-4CD8-965D-EC85D3805766}
+	EndGlobalSection
+EndGlobal
