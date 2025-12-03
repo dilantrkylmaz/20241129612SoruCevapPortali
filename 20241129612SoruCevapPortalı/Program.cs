@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using _20241129612SoruCevapPortalı.Models;
 
 namespace _20241129612SoruCevapPortalı
 {
@@ -6,19 +7,22 @@ namespace _20241129612SoruCevapPortalı
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);,
-            builder.Services.AddDbContext<>
+            var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // 1. Veritabanı Bağlantısı (SQL Server)
+            // appsettings.json dosyasındaki "DefaultConnection" ismini kullanır.
+            builder.Services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // 2. Servislerin Eklenmesi
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // 3. HTTP İstek Hattının Yapılandırılması
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
