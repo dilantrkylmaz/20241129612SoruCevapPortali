@@ -1,0 +1,59 @@
+﻿@model List<_20241129612SoruCevapPortalı.Models.Answer>
+@{
+    ViewData["Title"] = "Tüm Cevaplar";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Sisteme Girilen Cevaplar</h3>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="width: 5%">#</th>
+                    <th style="width: 20%">Cevaplayan</th>
+                    <th style="width: 30%">Soru Başlığı</th>
+                    <th style="width: 35%">Cevap İçeriği</th>
+                    <th style="width: 10%">İşlem</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>
+                             <span class="badge bg-secondary">
+                                 <i class="fas fa-user"></i> @(item.User?.Username ?? "Silinmiş Üye")
+                             </span>
+                        </td>
+                        <td>
+                            <a href="/Question/Details/@item.QuestionId" target="_blank">
+                                @(item.Question?.Title ?? "Silinmiş Soru") <i class="fas fa-external-link-alt small"></i>
+                            </a>
+                        </td>
+                        <td>
+                            @if(item.Content.Length > 60)
+                            {
+                                @item.Content.Substring(0, 60) <span class="text-muted">...</span>
+                            }
+                            else
+                            {
+                                @item.Content
+                            }
+                        </td>
+                        <td>
+                            <a href="/Admin/Answer/Delete/@item.Id" 
+                               onclick="return confirm('Bu cevabı silmek istediğine emin misin?')" 
+                               class="btn btn-danger btn-sm">
+                               <i class="fas fa-trash"></i> Sil
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

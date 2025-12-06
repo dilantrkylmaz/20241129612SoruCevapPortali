@@ -17,11 +17,19 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         // SORULARI LİSTELE
-        public IActionResult Index()
+        public IActionResult Index(string search)
         {
-            // Kullanıcı, Kategori ve Cevap sayılarını getir
-            var questions = _questionRepo.GetAll(x => x.User, y => y.Category, z => z.Answers);
-            return View(questions.OrderByDescending(x => x.CreatedDate).ToList());
+            // Önce ilişkili verilerle (User, Category) hepsini çekiyoruz
+            var questions = _questionRepo.GetAll(x => x.User, x => x.Category);
+
+            // Eğer arama yapılmışsa listeyi filtreliyoruz
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                questions = questions.Where(x => x.Title.ToLower().Contains(search)).ToList();
+            }
+
+            return View(questions);
         }
 
         // SORUYU SİL

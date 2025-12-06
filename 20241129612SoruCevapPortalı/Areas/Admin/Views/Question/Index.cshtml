@@ -9,6 +9,22 @@
         <h3 class="card-title">Tüm Sorular</h3>
     </div>
     <div class="card-body p-0">
+        <div class="card-body border-bottom">
+            <form method="get" action="/Admin/Question/Index">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Soru başlığında ara..." value="@Context.Request.Query["search"]">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Ara
+                        </button>
+                        @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
+                        {
+                            <a href="/Admin/Question/Index" class="btn btn-secondary">Temizle</a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
         <table class="table table-striped projects">
             <thead>
                 <tr>

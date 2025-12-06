@@ -1,17 +1,25 @@
 ﻿@using System.Security.Claims
 @using _20241129612SoruCevapPortalı.Repositories.Abstract
 @using _20241129612SoruCevapPortalı.Models
+@inject AppDbContext Context
 @inject IRepository<User> UserRepo
 @{
-    // Giriş yapan kullanıcının ID'sini alıp veritabanından bilgilerini çekiyoruz
+    // 1. Kullanıcı ID'sini al
     var userId = User.FindFirstValue("UserId");
-    var currentUser = userId != null ? UserRepo.GetById(int.Parse(userId)) : null;
-        
-    // Resim yoksa varsayılan avatar
+
+    // 2. Kullanıcıyı veritabanından çek (Hata almamak için güvenli kontrol)
+    User currentUser = null;
+    if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int id))
+    {
+        currentUser = UserRepo.GetById(id);
+    }
+
+    // 3. Resim Mantığı: Profil resmi varsa onu, yoksa yerel 'default-user.png' kullan
     string userImg = (!string.IsNullOrEmpty(currentUser?.ProfileImageUrl))
         ? currentUser.ProfileImageUrl
-        : "https://adminlte.io/themes/v3/dist/img/user2-160x160.jpg";
+        : "/img/default-user.png";
 
+    // 4. İsim Mantığı
     string userName = currentUser?.Username ?? "Misafir";
 }
 
@@ -56,7 +64,6 @@
                 </li>
             </ul>
         </nav>
-
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <a href="/Admin/Dashboard" class="brand-link">
                 <span class="brand-text font-weight-light px-3">YÖNETİCİ PANELİ</span>
@@ -65,7 +72,10 @@
             <div class="sidebar">
                 <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                     <div class="image">
-                        <img src="img/default-user.png" class="img-circle elevation-2" alt="User Image" style="width: 35px; height: 35px; object-fit: cover;">
+                        <img src="@userImg"
+                             class="img-circle elevation-2"
+                             alt="User Image"
+                             style="width: 35px; height: 35px; object-fit: cover;">
                     </div>
                     <div class="info">
                         <a href="/Admin/Profile/Index" class="d-block">@userName</a>
@@ -95,6 +105,13 @@
                             <a href="/Admin/Question/Index" class="nav-link">
                                 <i class="nav-icon fas fa-question-circle"></i>
                                 <p>Sorular</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="/Admin/Answer/Index" class="nav-link">
+                                <i class="nav-icon fas fa-comments"></i>
+                                <p>Cevaplar</p>
                             </a>
                         </li>
 
@@ -129,7 +146,6 @@
                 </div>
             </div>
         </div>
-
         <footer class="main-footer">
             <div class="float-right d-none d-sm-inline">
                 Soru Cevap Portalı v1.0
@@ -137,7 +153,6 @@
             <strong>Copyright &copy; 2025.</strong> Tüm hakları saklıdır.
         </footer>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>

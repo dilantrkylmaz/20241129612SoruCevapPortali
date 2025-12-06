@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Genel Bakış";
+    ViewData["Title"] = "Özet Paneli";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -7,39 +7,61 @@
     <div class="col-lg-3 col-6">
         <div class="small-box bg-info">
             <div class="inner">
-                <h3>150</h3>
-                <p>Toplam Soru</p>
+                <h3>@ViewBag.UserCount</h3>
+                <p>Toplam Üye</p>
             </div>
             <div class="icon">
-                <i class="fas fa-question"></i>
+                <i class="fas fa-users"></i>
             </div>
-            <a href="#" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="/Admin/User/Index" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 
     <div class="col-lg-3 col-6">
         <div class="small-box bg-success">
             <div class="inner">
-                <h3>53</h3>
-                <p>Toplam Cevap</p>
+                <h3>@ViewBag.QuestionCount</h3>
+                <p>Toplam Soru</p>
             </div>
             <div class="icon">
-                <i class="fas fa-comments"></i>
+                <i class="fas fa-question-circle"></i>
             </div>
-            <a href="#" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="/Admin/Question/Index" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 
     <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
             <div class="inner">
-                <h3>44</h3>
-                <p>Üye Sayısı</p>
+                <h3>@ViewBag.CategoryCount</h3>
+                <p>Kategoriler</p>
             </div>
             <div class="icon">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-list"></i>
             </div>
-            <a href="#" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
+            <a href="/Admin/Category/Index" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
         </div>
+    </div>
+
+    <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+            <div class="inner">
+                <h3>@ViewBag.AnswerCount</h3>
+                <p>Verilen Cevaplar</p>
+            </div>
+            <div class="icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <a href="/Admin/Answer/Index" class="small-box-footer">Detaylar <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header border-0">
+        <h3 class="card-title">Sisteme Hoşgeldiniz</h3>
+    </div>
+    <div class="card-body">
+        <p>Sol menüden içerik yönetimi ve kullanıcı işlemlerini gerçekleştirebilirsiniz.</p>
     </div>
 </div>

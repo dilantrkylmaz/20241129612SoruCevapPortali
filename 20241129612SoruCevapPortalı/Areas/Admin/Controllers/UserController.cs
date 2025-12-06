@@ -17,12 +17,25 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         // 1. ÜYE LİSTESİ
-        public IActionResult Index()
+        [HttpGet]
+        public IActionResult Index(string search)
         {
-            // Tüm kullanıcıları getir (Repository'de Include varsa soruları da çekebiliriz)
-            // Şimdilik sadece User listesi yeterli
-            var users = _userRepo.GetAll();
-            return View(users);
+            // Arama kutusu boşsa hepsini getir
+            if (string.IsNullOrEmpty(search))
+            {
+                return View(_userRepo.GetAll());
+            }
+
+            // Doluysa filtrele (Büyük küçük harf duyarsız yapmaya çalışıyoruz)
+            search = search.ToLower();
+            var filteredUsers = _userRepo.GetAll(x =>
+                x.Username.ToLower().Contains(search) ||
+                x.FirstName.ToLower().Contains(search) ||
+                x.LastName.ToLower().Contains(search) ||
+                x.Email.ToLower().Contains(search)
+            );
+
+            return View(filteredUsers);
         }
 
         // 2. ÜYE SİLME
@@ -90,6 +103,55 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
                 _userRepo.Update(user);
             }
+            return RedirectToAction("Index");
+        }
+        // 4. ÜYE DÜZENLEME SAYFASI (GET)
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var user = _userRepo.GetById(id);
+            if (user == null)
+            {
+                return RedirectToAction("Index");
+            }
+
+            // MainAdmin dışındakiler MainAdmin'i düzenleyemesin
+            if (user.Role == "MainAdmin" && !User.IsInRole("MainAdmin"))
+            {
+                TempData["Error"] = "Ana Yöneticinin bilgilerini düzenleyemezsiniz!";
+                return RedirectToAction("Index");
+            }
+
+            return View(user);
+        }
+
+        // 5. ÜYE DÜZENLEME İŞLEMİ (POST)
+        [HttpPost]
+        public IActionResult Edit(User p)
+        {
+            var user = _userRepo.GetById(p.Id);
+            if (user != null)
+            {
+                // Temel Bilgileri Güncelle
+                user.FirstName = p.FirstName;
+                user.LastName = p.LastName;
+                user.Username = p.Username;
+                user.Email = p.Email;
+                user.PhoneNumber = p.PhoneNumber;
+
+                // Şifre alanı boş değilse şifreyi de güncelle (Boşsa eskisi kalsın)
+                if (!string.IsNullOrEmpty(p.Password))
+                {
+                    user.Password = p.Password;
+                }
+
+                // Rolü de buradan güncelleyebilsin (İsteğe bağlı)
+                // user.Role = p.Role; 
+
+                _userRepo.Update(user);
+                TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";
+            }
+
             return RedirectToAction("Index");
         }
     }

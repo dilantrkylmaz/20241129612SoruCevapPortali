@@ -1,0 +1,54 @@
+﻿@model _20241129612SoruCevapPortalı.Models.User
+@{
+    ViewData["Title"] = "Üye Düzenle";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card card-warning">
+    <div class="card-header">
+        <h3 class="card-title">Üye Bilgilerini Güncelle: @Model.Username</h3>
+    </div>
+
+    <form method="post">
+        <div class="card-body">
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label>Ad</label>
+                    <input type="text" name="FirstName" class="form-control" value="@Model.FirstName" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label>Soyad</label>
+                    <input type="text" name="LastName" class="form-control" value="@Model.LastName" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Kullanıcı Adı</label>
+                <input type="text" name="Username" class="form-control" value="@Model.Username" required>
+            </div>
+
+            <div class="form-group">
+                <label>E-Posta</label>
+                <input type="email" name="Email" class="form-control" value="@Model.Email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Telefon</label>
+                <input type="text" name="PhoneNumber" class="form-control" value="@Model.PhoneNumber" required>
+            </div>
+
+            <div class="form-group">
+                <label>Yeni Şifre</label>
+                <input type="text" name="Password" class="form-control" placeholder="Değiştirmek istemiyorsanız boş bırakın">
+                <small class="text-muted">Şifre değiştirilmeyecekse boş bırakınız.</small>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <button type="submit" class="btn btn-warning"><i class="fas fa-save"></i> Güncelle</button>
+            <a href="/Admin/User/Index" class="btn btn-default float-right">İptal</a>
+        </div>
+    </form>
+</div>

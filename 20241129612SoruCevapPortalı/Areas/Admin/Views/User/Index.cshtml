@@ -17,6 +17,22 @@
     }
 
     <div class="card-body p-0">
+        <div class="card-body border-bottom">
+            <form method="get" action="/Admin/User/Index">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Ad, Soyad, Kullanıcı Adı veya E-Posta ara..." value="@Context.Request.Query["search"]">
+                    <div class="input-group-append">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Ara
+                        </button>
+                        @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
+                        {
+                            <a href="/Admin/User/Index" class="btn btn-secondary">Temizle</a>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
         <table class="table table-striped projects">
             <thead>
                 <tr>
@@ -81,6 +97,9 @@
                             {
                                 if (item.Role == "Uye" || User.IsInRole("MainAdmin"))
                                 {
+                                    <a class="btn btn-info btn-sm" href="/Admin/User/Edit/@item.Id" title="Düzenle">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
                                     <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');"><i class="fas fa-trash"></i></a>
                                 }
                                 if (item.Role == "Uye")
