@@ -1,46 +1,50 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using _20241129612SoruCevapPortalı.Models;
+﻿using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
+using Microsoft.AspNetCore.Mvc;
 
-namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
+public class QuestionController : Controller
 {
-    [Area("Admin")]
-    [Authorize(Roles = "Admin,MainAdmin")] // Sadece yöneticiler girebilir
-    public class QuestionController : Controller
+    private readonly IRepository<Question> _repo;
+    private readonly IRepository<Category> _catRepo; // Kategoriler için repo ekledik
+
+    public QuestionController(IRepository<Question> repo, IRepository<Category> catRepo)
     {
-        private readonly IRepository<Question> _questionRepo;
+        _repo = repo;
+        _catRepo = catRepo;
+    }
 
-        public QuestionController(IRepository<Question> questionRepo)
+    public IActionResult Index(string search, int? categoryId)
+    {
+        // 1. Cevapları (Answers) da Include ettik ki sayıları doğru gelsin
+        var questions = _repo.GetAll(x => x.User, x => x.Category, x => x.Answers);
+
+        // 2. Arama Filtresi
+        if (!string.IsNullOrEmpty(search))
         {
-            _questionRepo = questionRepo;
+            search = search.ToLower();
+            questions = questions.Where(x => x.Title.ToLower().Contains(search)).ToList();
         }
 
-        // SORULARI LİSTELE
-        public IActionResult Index(string search)
+        // 3. Kategori Filtresi
+        if (categoryId.HasValue && categoryId.Value > 0)
         {
-            // Önce ilişkili verilerle (User, Category) hepsini çekiyoruz
-            var questions = _questionRepo.GetAll(x => x.User, x => x.Category);
-
-            // Eğer arama yapılmışsa listeyi filtreliyoruz
-            if (!string.IsNullOrEmpty(search))
-            {
-                search = search.ToLower();
-                questions = questions.Where(x => x.Title.ToLower().Contains(search)).ToList();
-            }
-
-            return View(questions);
+            questions = questions.Where(x => x.CategoryId == categoryId.Value).ToList();
         }
 
-        // SORUYU SİL
-        public IActionResult Delete(int id)
+        // Filtre dropdown'ı için kategorileri View'e gönderiyoruz
+        ViewBag.Categories = _catRepo.GetAll();
+
+        return View(questions);
+    }
+
+    // SORUYU SİL
+    public IActionResult Delete(int id)
         {
-            var question = _questionRepo.GetById(id);
+            var question = _repo.GetById(id);
             if (question != null)
             {
-                _questionRepo.Delete(question);
+                _repo.Delete(question);
             }
             return RedirectToAction("Index");
         }
     }
-}

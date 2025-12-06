@@ -11,54 +11,46 @@
     <div class="card-body p-0">
         <div class="card-body border-bottom">
             <form method="get" action="/Admin/Question/Index">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Soru başlığında ara..." value="@Context.Request.Query["search"]">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i> Ara
-                        </button>
-                        @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
-                        {
-                            <a href="/Admin/Question/Index" class="btn btn-secondary">Temizle</a>
-                        }
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" name="search" class="form-control" placeholder="Başlık ara..." value="@Context.Request.Query["search"]">
+                    </div>
+                    <div class="col-md-4">
+                        <select name="categoryId" class="form-control">
+                            <option value="">-- Tüm Kategoriler --</option>
+                            @foreach (var cat in ViewBag.Categories as List<_20241129612SoruCevapPortalı.Models.Category>)
+                            {
+                                <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.Name</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Filtrele</button>
+                        <a href="/Admin/Question/Index" class="btn btn-secondary">Temizle</a>
                     </div>
                 </div>
             </form>
         </div>
-        <table class="table table-striped projects">
-            <thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
                 <tr>
-                    <th style="width: 5%">#</th>
-                    <th style="width: 30%">Başlık</th>
-                    <th style="width: 15%">Kategori</th>
-                    <th style="width: 15%">Soran</th>
-                    <th style="width: 10%">Cevap</th>
-                    <th style="width: 25%">İşlemler</th>
+                    <td>@item.Id</td>
+                    <td>
+                        @if (item.Answers != null && item.Answers.Count > 0)
+                        {
+                            <span class="badge bg-success">@item.Answers.Count Cevap</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">0 Cevap</span>
+                        }
+                    </td>
+
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model)
-                {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>
-                            <a href="/Question/Details/@item.Id" target="_blank" class="fw-bold text-dark">
-                                @item.Title
-                            </a>
-                            <br />
-                            <small class="text-muted">@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
-                        </td>
-                        <td><span class="badge bg-secondary">@item.Category?.Name</span></td>
-                        <td>@item.User?.Username</td>
-                        <td><span class="badge badge-info">@(item.Answers?.Count ?? 0)</span></td>
-                        <td class="project-actions text-right">
-                            <a class="btn btn-danger btn-sm" href="/Admin/Question/Delete/@item.Id" onclick="return confirm('Bu soruyu kalıcı olarak silmek istediğine emin misin?');">
-                                <i class="fas fa-trash"></i> Sil
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
+            }
+        </tbody>
         </table>
     </div>
 </div>

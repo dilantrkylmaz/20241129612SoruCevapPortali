@@ -18,24 +18,30 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
         // 1. ÜYE LİSTESİ
         [HttpGet]
-        public IActionResult Index(string search)
+        // UserController.cs -> Index Metodu
+        public IActionResult Index(string search, string role)
         {
-            // Arama kutusu boşsa hepsini getir
-            if (string.IsNullOrEmpty(search))
+            var users = _userRepo.GetAll(); // Tüm kullanıcılar
+
+            // Arama Filtresi
+            if (!string.IsNullOrEmpty(search))
             {
-                return View(_userRepo.GetAll());
+                search = search.ToLower();
+                users = users.Where(x =>
+                    x.Username.ToLower().Contains(search) ||
+                    x.FirstName.ToLower().Contains(search) ||
+                    x.LastName.ToLower().Contains(search) ||
+                    x.Email.ToLower().Contains(search)
+                ).ToList();
             }
 
-            // Doluysa filtrele (Büyük küçük harf duyarsız yapmaya çalışıyoruz)
-            search = search.ToLower();
-            var filteredUsers = _userRepo.GetAll(x =>
-                x.Username.ToLower().Contains(search) ||
-                x.FirstName.ToLower().Contains(search) ||
-                x.LastName.ToLower().Contains(search) ||
-                x.Email.ToLower().Contains(search)
-            );
+            // Rol Filtresi
+            if (!string.IsNullOrEmpty(role))
+            {
+                users = users.Where(x => x.Role == role).ToList();
+            }
 
-            return View(filteredUsers);
+            return View(users);
         }
 
         // 2. ÜYE SİLME

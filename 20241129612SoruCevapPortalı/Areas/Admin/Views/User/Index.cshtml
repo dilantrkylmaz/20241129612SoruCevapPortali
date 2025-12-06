@@ -19,28 +19,34 @@
     <div class="card-body p-0">
         <div class="card-body border-bottom">
             <form method="get" action="/Admin/User/Index">
-                <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Ad, Soyad, Kullanıcı Adı veya E-Posta ara..." value="@Context.Request.Query["search"]">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i> Ara
-                        </button>
-                        @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
-                        {
-                            <a href="/Admin/User/Index" class="btn btn-secondary">Temizle</a>
-                        }
+                <div class="row">
+                    <div class="col-md-5">
+                        <input type="text" name="search" class="form-control" placeholder="Ad, Soyad veya Kullanıcı Adı..." value="@Context.Request.Query["search"]">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="role" class="form-control">
+                            <option value="">-- Tüm Roller --</option>
+                            <option value="Uye" selected="@(Context.Request.Query["role"] == "Uye")">Üye</option>
+                            <option value="Admin" selected="@(Context.Request.Query["role"] == "Admin")">Yönetici</option>
+                            <option value="MainAdmin" selected="@(Context.Request.Query["role"] == "MainAdmin")">Ana Yönetici</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Ara</button>
+                        <a href="/Admin/User/Index" class="btn btn-secondary">Sıfırla</a>
                     </div>
                 </div>
             </form>
         </div>
+
         <table class="table table-striped projects">
             <thead>
                 <tr>
                     <th style="width: 5%">#</th>
-                    <th style="width: 30%">Kullanıcı Adı</th>
+                    <th style="width: 30%">Kullanıcı Bilgileri</th>
+                    <th style="width: 20%">İletişim</th>
                     <th style="width: 15%">Rol</th>
-                    <th style="width: 15%">Soru Sayısı</th>
-                    <th style="width: 35%" class="text-right">İşlemler</th>
+                    <th style="width: 30%" class="text-right">İşlemler</th>
                 </tr>
             </thead>
             <tbody>
@@ -49,20 +55,11 @@
                     <tr>
                         <td>@item.Id</td>
                         <td>
-                            @{
-                                string avatarUrl = !string.IsNullOrEmpty(item.ProfileImageUrl)
-                                ? item.ProfileImageUrl
-                                : "/img/default-user.png";
-                            }
-
                             <div class="d-flex align-items-center">
-                                <img src="@avatarUrl"
-                                     alt="Profil"
-                                     class="rounded-circle me-2"
-                                     width="40"
-                                     height="40"
-                                     style="object-fit: cover; border: 2px solid #ddd;">
-
+                                @{
+                                    string avatarUrl = !string.IsNullOrEmpty(item.ProfileImageUrl) ? item.ProfileImageUrl : "/img/default-user.png";
+                                }
+                                <img src="@avatarUrl" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover; border: 2px solid #ddd;">
                                 <div>
                                     <div class="fw-bold">@item.FullName</div>
                                     <small class="text-muted">@@@item.Username</small>
@@ -70,38 +67,31 @@
                             </div>
                         </td>
                         <td>
-                            <div style="font-size: 0.9rem;">
+                            <div style="font-size: 0.85rem;">
                                 <div><i class="fas fa-envelope text-muted"></i> @item.Email</div>
                                 <div><i class="fas fa-phone text-muted"></i> @item.PhoneNumber</div>
                             </div>
                         </td>
-
                         <td>
                             @if (item.Role == "MainAdmin")
                             {
-                                <span class="badge bg-warning text-dark p-2"><i class="fas fa-crown"></i> Ana Yönetici</span>
+                                <span class="badge bg-warning text-dark">Ana Yönetici</span>
                             }
                             else if (item.Role == "Admin")
                             {
-                                <span class="badge badge-danger p-2">Yönetici</span>
+                                <span class="badge bg-danger">Yönetici</span>
                             }
                             else
                             {
-                                <span class="badge badge-success p-2">Üye</span>
+                                <span class="badge bg-success">Üye</span>
                             }
                         </td>
-
                         <td class="text-right">
-                            <!-- İŞLEMLER KISMI AYNI KALSIN (SİLME BUTONLARI VS.) -->
                             @if (item.Role != "MainAdmin")
                             {
-                                if (item.Role == "Uye" || User.IsInRole("MainAdmin"))
-                                {
-                                    <a class="btn btn-info btn-sm" href="/Admin/User/Edit/@item.Id" title="Düzenle">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </a>
-                                    <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');"><i class="fas fa-trash"></i></a>
-                                }
+                                <a class="btn btn-info btn-sm" href="/Admin/User/Edit/@item.Id"><i class="fas fa-pencil-alt"></i></a>
+                                <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');"><i class="fas fa-trash"></i></a>
+
                                 if (item.Role == "Uye")
                                 {
                                     <a class="btn btn-success btn-sm" href="/Admin/User/ChangeRole/@item.Id" title="Yönetici Yap"><i class="fas fa-user-shield"></i></a>

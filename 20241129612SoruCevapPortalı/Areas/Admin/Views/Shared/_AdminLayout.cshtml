@@ -1,26 +1,26 @@
 ﻿@using System.Security.Claims
 @using _20241129612SoruCevapPortalı.Repositories.Abstract
 @using _20241129612SoruCevapPortalı.Models
-@inject AppDbContext Context
 @inject IRepository<User> UserRepo
 @{
-    // 1. Kullanıcı ID'sini al
-    var userId = User.FindFirstValue("UserId");
-
-    // 2. Kullanıcıyı veritabanından çek (Hata almamak için güvenli kontrol)
+    // GARANTİ YÖNTEM: Kullanıcı adından bulma
     User currentUser = null;
-    if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int id))
+    if (User.Identity.IsAuthenticated)
     {
-        currentUser = UserRepo.GetById(id);
+        string currentUsername = User.Identity.Name;
+        if (!string.IsNullOrEmpty(currentUsername))
+        {
+            // Kullanıcıyı veritabanından çekiyoruz
+            currentUser = UserRepo.Get(x => x.Username == currentUsername);
+        }
     }
 
-    // 3. Resim Mantığı: Profil resmi varsa onu, yoksa yerel 'default-user.png' kullan
+    // Resim yoksa veya kullanıcı bulunamazsa varsayılan resim
     string userImg = (!string.IsNullOrEmpty(currentUser?.ProfileImageUrl))
         ? currentUser.ProfileImageUrl
         : "/img/default-user.png";
 
-    // 4. İsim Mantığı
-    string userName = currentUser?.Username ?? "Misafir";
+    string userName = currentUser?.FullName ?? "Yönetici";
 }
 
 <!DOCTYPE html>
