@@ -15,7 +15,7 @@
 
                 <div class="text-center">
                     <img class="profile-user-img img-fluid img-circle"
-                         src="@resimUrl"
+                         src="@(!string.IsNullOrEmpty(Model.ProfileImageUrl) ? Model.ProfileImageUrl : "/img/default-user.png")"
                          alt="User profile picture"
                          style="width: 128px; height: 128px; object-fit: cover;">
                 </div>

@@ -34,22 +34,25 @@
                         <td>@item.Id</td>
                         <td>
                             @{
-                                // Resim var mı kontrolü
-                                // Yoksa Ad+Soyad baş harflerinden avatar oluştur
                                 string avatarUrl = !string.IsNullOrEmpty(item.ProfileImageUrl)
                                 ? item.ProfileImageUrl
-                                : $"[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){item.FirstName}+{item.LastName}&background=random&color=fff";
+                                : "/img/default-user.png";
                             }
 
                             <div class="d-flex align-items-center">
-                                <img src="@avatarUrl" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover; border: 2px solid #ddd;">
+                                <img src="@avatarUrl"
+                                     alt="Profil"
+                                     class="rounded-circle me-2"
+                                     width="40"
+                                     height="40"
+                                     style="object-fit: cover; border: 2px solid #ddd;">
+
                                 <div>
                                     <div class="fw-bold">@item.FullName</div>
                                     <small class="text-muted">@@@item.Username</small>
                                 </div>
                             </div>
                         </td>
-
                         <td>
                             <div style="font-size: 0.9rem;">
                                 <div><i class="fas fa-envelope text-muted"></i> @item.Email</div>
