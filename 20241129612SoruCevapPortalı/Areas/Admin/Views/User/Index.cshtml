@@ -33,8 +33,28 @@
                     <tr>
                         <td>@item.Id</td>
                         <td>
-                            <img alt="Avatar" class="table-avatar rounded-circle" src="https://ui-avatars.com/api/?name=@item.Username&background=random" width="40">
-                            <b>@item.Username</b>
+                            @{
+                                // Resim var mı kontrolü
+                                // Yoksa Ad+Soyad baş harflerinden avatar oluştur
+                                string avatarUrl = !string.IsNullOrEmpty(item.ProfileImageUrl)
+                                ? item.ProfileImageUrl
+                                : $"[https://ui-avatars.com/api/?name=](https://ui-avatars.com/api/?name=){item.FirstName}+{item.LastName}&background=random&color=fff";
+                            }
+
+                            <div class="d-flex align-items-center">
+                                <img src="@avatarUrl" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover; border: 2px solid #ddd;">
+                                <div>
+                                    <div class="fw-bold">@item.FullName</div>
+                                    <small class="text-muted">@@@item.Username</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <div style="font-size: 0.9rem;">
+                                <div><i class="fas fa-envelope text-muted"></i> @item.Email</div>
+                                <div><i class="fas fa-phone text-muted"></i> @item.PhoneNumber</div>
+                            </div>
                         </td>
 
                         <td>
@@ -52,25 +72,21 @@
                             }
                         </td>
 
-                        <td><span class="badge badge-info">@(item.Questions?.Count ?? 0)</span></td>
-
                         <td class="text-right">
+                            <!-- İŞLEMLER KISMI AYNI KALSIN (SİLME BUTONLARI VS.) -->
                             @if (item.Role != "MainAdmin")
                             {
-                                @if (item.Role == "Uye" || User.IsInRole("MainAdmin"))
+                                if (item.Role == "Uye" || User.IsInRole("MainAdmin"))
                                 {
-                                    <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');">
-                                        <i class="fas fa-trash"></i> Sil
-                                    </a>
+                                    <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');"><i class="fas fa-trash"></i></a>
                                 }
-
-                                @if (item.Role == "Uye")
+                                if (item.Role == "Uye")
                                 {
-                                    <a class="btn btn-success btn-sm" href="/Admin/User/ChangeRole/@item.Id">Yönetici Yap</a>
+                                    <a class="btn btn-success btn-sm" href="/Admin/User/ChangeRole/@item.Id" title="Yönetici Yap"><i class="fas fa-user-shield"></i></a>
                                 }
                                 else
                                 {
-                                    <a class="btn btn-warning btn-sm" href="/Admin/User/ChangeRole/@item.Id">Yetkisini Al</a>
+                                    <a class="btn btn-warning btn-sm" href="/Admin/User/ChangeRole/@item.Id" title="Yetkisini Al"><i class="fas fa-user-times"></i></a>
                                 }
                             }
                         </td>

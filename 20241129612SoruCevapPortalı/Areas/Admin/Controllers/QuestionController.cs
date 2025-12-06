@@ -19,7 +19,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         // SORULARI LİSTELE
         public IActionResult Index()
         {
-            // Kullanıcı ve Kategori bilgileriyle getir
+            // Kullanıcı, Kategori ve Cevap sayılarını getir
             var questions = _questionRepo.GetAll(x => x.User, y => y.Category, z => z.Answers);
             return View(questions.OrderByDescending(x => x.CreatedDate).ToList());
         }

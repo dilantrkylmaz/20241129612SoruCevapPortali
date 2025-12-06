@@ -12,12 +12,15 @@ namespace _20241129612SoruCevapPortalı.Models
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        // Hangi soruya cevap verildi?
+        // İlişkiler
         public int QuestionId { get; set; }
-        public virtual Question Question { get; set; }
 
-        // Cevabı kim yazdı? (Artık ID ile bağlıyoruz)
+        // ? İŞARETİ EKLENDİ (Validation hatasını önler)
+        public virtual Question? Question { get; set; }
+
         public int UserId { get; set; }
-        public virtual User User { get; set; }
+
+        // ? İŞARETİ EKLENDİ (Validation hatasını önler)
+        public virtual User? User { get; set; }
     }
 }

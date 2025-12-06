@@ -16,7 +16,7 @@ namespace _20241129612SoruCevapPortalı.Repositories.Concrete
             _dbSet = _context.Set<T>();
         }
 
-        // --- YENİ EKLENEN METODLAR (BAŞLANGIÇ) ---
+        // Hem düz listeleme hem de Include işlemini bu metod tek başına yapar
         public List<T> GetAll(params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _dbSet;
@@ -28,6 +28,11 @@ namespace _20241129612SoruCevapPortalı.Repositories.Concrete
                 }
             }
             return query.ToList();
+        }
+
+        public List<T> GetAll(Expression<Func<T, bool>> filter)
+        {
+            return _dbSet.Where(filter).ToList();
         }
 
         public T Get(Expression<Func<T, bool>> filter, params string[] includeProperties)
@@ -42,7 +47,6 @@ namespace _20241129612SoruCevapPortalı.Repositories.Concrete
             }
             return query.Where(filter).FirstOrDefault();
         }
-        // --- YENİ EKLENEN METODLAR (BİTİŞ) ---
 
         public void Add(T entity)
         {
@@ -55,10 +59,6 @@ namespace _20241129612SoruCevapPortalı.Repositories.Concrete
             _dbSet.Remove(entity);
             Save();
         }
-
-        public List<T> GetAll() { return _dbSet.ToList(); }
-
-        public List<T> GetAll(Expression<Func<T, bool>> filter) { return _dbSet.Where(filter).ToList(); }
 
         public T GetById(int id) { return _dbSet.Find(id); }
 

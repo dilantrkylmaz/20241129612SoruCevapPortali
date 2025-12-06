@@ -9,73 +9,89 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kayıt Ol - Soru Cevap Portalı</title>
+    <title>Kayıt Ol</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         body {
-            background-color: #f8f9fc;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .login-card {
+        .card {
             border: none;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-
-        .register-header {
-            background: linear-gradient(45deg, #1cc88a, #13855c);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
-            padding: 20px;
-        }
-
-        .btn-register {
-            background: #1cc88a;
-            border: none;
-            padding: 10px;
-        }
-
-            .btn-register:hover {
-                background: #17a673;
-            }
     </style>
 </head>
-<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+<body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card login-card">
-                    <div class="card-header register-header text-center">
-                        <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Kayıt Ol</h3>
+            <div class="col-md-6 col-lg-5">
+                <div class="card p-4">
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold text-primary">Yeni Hesap Oluştur</h3>
+                        <small class="text-muted">Hemen aramıza katıl!</small>
                     </div>
-                    <div class="card-body p-4">
-                        @if (ViewBag.Error != null)
-                        {
-                            <div class="alert alert-danger text-center">@ViewBag.Error</div>
-                        }
-                        <form asp-action="Register" method="post">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Kullanıcı Adı</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
-                                    <input type="text" asp-for="Username" class="form-control" required />
-                                </div>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger text-center">@ViewBag.Error</div>
+                    }
+
+                    <form asp-action="Register" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small"></div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label>Ad</label>
+                                <input type="text" asp-for="FirstName" class="form-control" required />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
                             </div>
-                            <div class="mb-4">
-                                <label class="form-label text-muted">Şifre</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
-                                    <input type="password" asp-for="Password" class="form-control" required />
-                                </div>
+                            <div class="col-6">
+                                <label>Soyad</label>
+                                <input type="text" asp-for="LastName" class="form-control" required />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
                             </div>
-                            <button type="submit" class="btn btn-success btn-register w-100 mb-3 text-white">Kaydı Tamamla</button>
-                        </form>
-                        <div class="text-center mt-3">
-                            <span class="text-muted">Zaten üye misin?</span>
-                            <a asp-action="Login" class="text-decoration-none fw-bold" style="color: #1cc88a;">Giriş Yap</a>
                         </div>
+
+                        <div class="mb-3">
+                            <label>Kullanıcı Adı</label>
+                            <input type="text" asp-for="Username" class="form-control" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label>E-Posta</label>
+                            <input type="email" asp-for="Email" class="form-control" required />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Telefon</label>
+                            <input type="tel" asp-for="PhoneNumber" class="form-control" placeholder="05XX..." required />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Şifre</label>
+                            <input type="password" asp-for="Password" class="form-control" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label>Profil Fotoğrafı (İsteğe Bağlı)</label>
+                            <input type="file" name="profileImage" class="form-control" accept="image/*" />
+                            <small class="text-muted" style="font-size: 0.8rem;">Yüklemezseniz isminize özel avatar oluşur.</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Kayıt Ol</button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Zaten üye misin?</span>
+                        <a href="/Account/Login" class="text-decoration-none fw-bold">Giriş Yap</a>
                     </div>
                 </div>
             </div>

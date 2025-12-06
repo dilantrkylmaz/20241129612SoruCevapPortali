@@ -1,0 +1,81 @@
+﻿@model _20241129612SoruCevapPortalı.Models.User
+@{
+    ViewData["Title"] = "Profilim";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    // Varsayılan resim yoksa avatar kullan
+    string resimUrl = string.IsNullOrEmpty(Model.ProfileImageUrl)
+        ? $"https://ui-avatars.com/api/?name={Model.Username}&size=128&background=random"
+        : Model.ProfileImageUrl;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-primary card-outline">
+            <div class="card-body box-profile">
+
+                <div class="text-center">
+                    <img class="profile-user-img img-fluid img-circle"
+                         src="@resimUrl"
+                         alt="User profile picture"
+                         style="width: 128px; height: 128px; object-fit: cover;">
+                </div>
+
+                <h3 class="profile-username text-center">@Model.Username</h3>
+                <p class="text-muted text-center">
+                    @(Model.Role == "MainAdmin" ? "👑 Ana Yönetici" : "Yönetici")
+                </p>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Success"]</div>
+                }
+
+                <form asp-action="Update" method="post" enctype="multipart/form-data" class="mt-4">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Kullanıcı Adı</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" value="@Model.Username" disabled>
+                            <small class="text-muted">Güvenlik gereği kullanıcı adı değiştirilemez.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Şifre</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="Password" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">E-Posta</label>
+                        <div class="col-sm-9">
+                            <input type="email" asp-for="Email" class="form-control" placeholder="ornek@email.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Telefon</label>
+                        <div class="col-sm-9">
+                            <input type="text" asp-for="PhoneNumber" class="form-control" placeholder="0555 555 55 55">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Profil Resmi</label>
+                        <div class="col-sm-9">
+                            <input type="file" name="profileImage" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="offset-sm-3 col-sm-9">
+                            <button type="submit" class="btn btn-primary">Bilgileri Güncelle</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -80,15 +80,21 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(p);
         }
 
-        // 4. SİLME
-        public IActionResult Delete(int id)
+        [HttpPost]
+        public IActionResult DeleteAjax(int id)
         {
             var category = _categoryRepo.GetById(id);
             if (category != null)
             {
-                _categoryRepo.Delete(category); // Repository üzerinden Sil
+                // Silme işlemi
+                _categoryRepo.Delete(category);
+
+                // Başarılı mesajı döndür
+                return Json(new { success = true, message = "Kategori başarıyla silindi." });
             }
-            return RedirectToAction("Index");
+
+            // Hata mesajı döndür
+            return Json(new { success = false, message = "Kategori bulunamadı!" });
         }
     }
 }
