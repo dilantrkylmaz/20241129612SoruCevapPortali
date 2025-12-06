@@ -1,0 +1,85 @@
+﻿@model _20241129612SoruCevapPortalı.Models.User
+@{
+    ViewData["Title"] = "Kayıt Ol";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kayıt Ol - Soru Cevap Portalı</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            background-color: #f8f9fc;
+        }
+
+        .login-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .register-header {
+            background: linear-gradient(45deg, #1cc88a, #13855c);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+        }
+
+        .btn-register {
+            background: #1cc88a;
+            border: none;
+            padding: 10px;
+        }
+
+            .btn-register:hover {
+                background: #17a673;
+            }
+    </style>
+</head>
+<body class="d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card login-card">
+                    <div class="card-header register-header text-center">
+                        <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Kayıt Ol</h3>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="alert alert-danger text-center">@ViewBag.Error</div>
+                        }
+                        <form asp-action="Register" method="post">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">Kullanıcı Adı</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-user"></i></span>
+                                    <input type="text" asp-for="Username" class="form-control" required />
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted">Şifre</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
+                                    <input type="password" asp-for="Password" class="form-control" required />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-register w-100 mb-3 text-white">Kaydı Tamamla</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <span class="text-muted">Zaten üye misin?</span>
+                            <a asp-action="Login" class="text-decoration-none fw-bold" style="color: #1cc88a;">Giriş Yap</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

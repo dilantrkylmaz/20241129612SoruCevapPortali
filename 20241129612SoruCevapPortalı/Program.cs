@@ -24,7 +24,7 @@ namespace _20241129612SoruCevapPortalı
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
-                    options.LoginPath = "/Login/Index";
+                    options.LoginPath = "/Account/Login";
                     options.AccessDeniedPath = "/Login/AccessDenied";
                 });
 
