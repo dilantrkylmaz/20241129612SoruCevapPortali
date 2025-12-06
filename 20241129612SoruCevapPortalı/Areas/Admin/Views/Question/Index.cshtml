@@ -1,56 +1,98 @@
 ﻿@model List<_20241129612SoruCevapPortalı.Models.Question>
 @{
-    ViewData["Title"] = "Soru Yönetimi";
+    ViewData["Title"] = "Tüm Sorular";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">Tüm Sorular</h3>
+        <h3 class="card-title">Sisteme Girilen Sorular</h3>
     </div>
-    <div class="card-body p-0">
-        <div class="card-body border-bottom">
-            <form method="get" action="/Admin/Question/Index">
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="text" name="search" class="form-control" placeholder="Başlık ara..." value="@Context.Request.Query["search"]">
-                    </div>
-                    <div class="col-md-4">
-                        <select name="categoryId" class="form-control">
-                            <option value="">-- Tüm Kategoriler --</option>
-                            @foreach (var cat in ViewBag.Categories as List<_20241129612SoruCevapPortalı.Models.Category>)
-                            {
-                                <option value="@cat.Id" selected="@(Context.Request.Query["categoryId"] == cat.Id.ToString())">@cat.Name</option>
-                            }
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Filtrele</button>
-                        <a href="/Admin/Question/Index" class="btn btn-secondary">Temizle</a>
-                    </div>
+
+    <div class="card-body border-bottom">
+        <form method="get" action="/Admin/Question/Index">
+            <div class="row">
+                <div class="col-md-3">
+                    <input type="text" name="search" class="form-control"
+                           placeholder="Başlıkta ara..."
+                           value="@ViewBag.Search">
                 </div>
-            </form>
-        </div>
 
-        <tbody>
-            @foreach (var item in Model)
-            {
+                <div class="col-md-3">
+                    <input type="text" name="searchUser" class="form-control"
+                           placeholder="Soran kişiyi ara..."
+                           value="@ViewBag.SearchUser">
+                </div>
+
+                <div class="col-md-3">
+                    <select name="categoryId" class="form-control">
+                        <option value="">-- Tüm Kategoriler --</option>
+                        @foreach (var cat in ViewBag.Categories as List<_20241129612SoruCevapPortalı.Models.Category>)
+                        {
+                            <option value="@cat.Id" selected="@(ViewBag.CategoryId == cat.Id)">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button class="btn btn-primary btn-block" type="submit"><i class="fas fa-search"></i> Filtrele</button>
+                    @if (!string.IsNullOrEmpty(ViewBag.Search) || !string.IsNullOrEmpty(ViewBag.SearchUser) || ViewBag.CategoryId != null)
+                    {
+                        <a href="/Admin/Question/Index" class="btn btn-secondary btn-block mt-1">Temizle</a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-body p-0">
+        <table class="table table-striped projects">
+            <thead>
                 <tr>
-                    <td>@item.Id</td>
-                    <td>
-                        @if (item.Answers != null && item.Answers.Count > 0)
-                        {
-                            <span class="badge bg-success">@item.Answers.Count Cevap</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">0 Cevap</span>
-                        }
-                    </td>
-
+                    <th style="width: 35%">Soru Başlığı</th>
+                    <th style="width: 20%">Soran</th>
+                    <th style="width: 15%">Kategori</th>
+                    <th style="width: 15%">Cevaplar</th>
+                    <th style="width: 15%">İşlemler</th>
                 </tr>
-            }
-        </tbody>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold text-dark" style="font-size:1.1em;">@item.Title</div>
+                            <small class="text-muted">#ID: @item.Id</small>
+                        </td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="@(!string.IsNullOrEmpty(item.User?.ProfileImageUrl) ? item.User.ProfileImageUrl : "/img/default-user.png")"
+                                     class="rounded-circle mr-2" width="30" height="30" style="object-fit: cover;">
+                                <span>@(item.User?.Username ?? "Silinmiş Üye")</span>
+                            </div>
+                        </td>
+
+                        <td><span class="badge badge-info">@item.Category?.Name</span></td>
+
+                        <td>
+                            @if (item.Answers != null && item.Answers.Count > 0)
+                            {
+                                <span class="badge bg-success">@item.Answers.Count Cevap</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">0 Cevap</span>
+                            }
+                        </td>
+
+                        <td>
+                            <a href="/Question/Details/@item.Id" target="_blank" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            <a href="/Admin/Question/Delete/@item.Id" onclick="return confirm('Bu soruyu ve tüm cevaplarını silmek istediğine emin misin?')" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
         </table>
     </div>
 </div>

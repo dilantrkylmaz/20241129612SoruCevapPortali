@@ -16,10 +16,34 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             _repo = repo;
         }
 
-        public IActionResult Index()
+        [HttpGet]
+        public IActionResult Index(string searchQuestion, string searchUser)
         {
-            // Cevapları getirirken kimin yazdığını (User) ve hangi soruya yazdığını (Question) da getiriyoruz.
+            // Önce tüm cevapları ilişkileriyle (Soru ve Üye) beraber çekiyoruz
             var answers = _repo.GetAll(x => x.User, x => x.Question);
+
+            // 1. Soru Başlığına Göre Filtrele
+            if (!string.IsNullOrEmpty(searchQuestion))
+            {
+                searchQuestion = searchQuestion.ToLower();
+                answers = answers.Where(x =>
+                    x.Question != null &&
+                    x.Question.Title.ToLower().Contains(searchQuestion)
+                ).ToList();
+            }
+
+            // 2. Cevap Veren Üyeye Göre Filtrele
+            if (!string.IsNullOrEmpty(searchUser))
+            {
+                searchUser = searchUser.ToLower();
+                answers = answers.Where(x =>
+                    x.User != null &&
+                    (x.User.Username.ToLower().Contains(searchUser) ||
+                     x.User.FirstName.ToLower().Contains(searchUser) ||
+                     x.User.LastName.ToLower().Contains(searchUser))
+                ).ToList();
+            }
+
             return View(answers);
         }
 

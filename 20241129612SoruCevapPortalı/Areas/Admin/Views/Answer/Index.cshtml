@@ -8,8 +8,37 @@
     <div class="card-header">
         <h3 class="card-title">Sisteme Girilen Cevaplar</h3>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-striped">
+<div class="card-body border-bottom">
+    <form method="get" action="/Admin/Answer/Index">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-question-circle"></i></span>
+                    </div>
+                    <input type="text" name="searchQuestion" class="form-control" placeholder="Soru başlığında ara..." value="@Context.Request.Query["searchQuestion"]">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    </div>
+                    <input type="text" name="searchUser" class="form-control" placeholder="Cevaplayanda ara..." value="@Context.Request.Query["searchUser"]">
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Filtrele</button>
+                <a href="/Admin/Answer/Index" class="btn btn-secondary">Sıfırla</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card-body p-0">
+    <table class="table table-striped">
             <thead>
                 <tr>
                     <th style="width: 5%">#</th>

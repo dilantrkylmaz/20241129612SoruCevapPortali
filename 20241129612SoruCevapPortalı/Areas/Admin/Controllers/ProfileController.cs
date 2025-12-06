@@ -19,6 +19,24 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            // Giriş yapan kullanıcının ID'sini Claims üzerinden alıyoruz
+            var userIdStr = User.FindFirstValue("UserId");
+
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            int userId = int.Parse(userIdStr);
+            var user = _userRepo.GetById(userId);
+
+            return View(user);
+        }
+
         // PROFİLİ GÖSTER
         [HttpPost]
         public IActionResult Index(User p, IFormFile? ProfileImage)

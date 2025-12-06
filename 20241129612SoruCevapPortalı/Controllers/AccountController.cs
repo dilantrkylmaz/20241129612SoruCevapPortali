@@ -10,7 +10,7 @@ namespace _20241129612SoruCevapPortalı.Controllers
     public class AccountController : Controller
     {
         private readonly IRepository<User> _userRepository;
-        private readonly IWebHostEnvironment _webHostEnvironment; // Dosya kaydetmek için
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public AccountController(IRepository<User> userRepository, IWebHostEnvironment webHostEnvironment)
         {
@@ -28,8 +28,8 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(User p)
         {
-            // Validasyon hatası olsa bile giriş denemesi yapabilmeli (Sadece Username/Password yeterli)
-            var user = _userRepository.GetAll(x => x.Username == p.Username && x.Password == p.Password).FirstOrDefault();
+            // Kullanıcı adı ve şifre kontrolü
+            var user = _userRepository.Get(x => x.Username == p.Username && x.Password == p.Password);
 
             if (user != null)
             {
@@ -44,6 +44,12 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 var authProperties = new AuthenticationProperties();
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+
+                // Admin ise Admin panele, Üye ise anasayfaya gitsin (İsteğe bağlı)
+                if (user.Role == "MainAdmin" || user.Role == "Admin")
+                {
+                    return RedirectToAction("Dashboard", "Admin");
+                }
 
                 return RedirectToAction("Index", "Home");
             }
@@ -62,42 +68,52 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(User p, IFormFile? profileImage)
         {
-            if (ModelState.IsValid)
+            // Validasyon kontrolü (Modelde Required alanlar boş mu?)
+            if (!ModelState.IsValid)
             {
-                // Aynı isimde kullanıcı var mı?
-                var existingUser = _userRepository.GetAll(x => x.Username == p.Username || x.Email == p.Email).FirstOrDefault();
-                if (existingUser != null)
-                {
-                    ViewBag.Error = "Bu kullanıcı adı veya e-posta zaten kayıtlı.";
-                    return View(p);
-                }
-
-                // 1. Profil Resmi Yüklendi mi?
-                if (profileImage != null)
-                {
-                    string extension = Path.GetExtension(profileImage.FileName);
-                    string newImageName = "user_" + Guid.NewGuid() + extension;
-                    string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "profiles");
-
-                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                    using (var stream = new FileStream(Path.Combine(folderPath, newImageName), FileMode.Create))
-                    {
-                        await profileImage.CopyToAsync(stream);
-                    }
-                    p.ProfileImageUrl = "/img/profiles/" + newImageName;
-                }
-                // Yüklenmediyse NULL kalacak, biz View tarafında avatar göstereceğiz.
-
-                p.Role = "Uye";
-                _userRepository.Add(p);
-
-                return RedirectToAction("Login");
+                return View(p);
             }
 
-            return View(p);
+            // 1. KULLANICI ADI KONTROLÜ
+            var checkUsername = _userRepository.Get(x => x.Username == p.Username);
+            if (checkUsername != null)
+            {
+                ViewBag.Error = "Bu kullanıcı adı zaten kullanılıyor! Lütfen başka bir ad seçiniz.";
+                return View(p);
+            }
+
+            // 2. E-POSTA KONTROLÜ
+            var checkEmail = _userRepository.Get(x => x.Email == p.Email);
+            if (checkEmail != null)
+            {
+                ViewBag.Error = "Bu e-posta adresi ile daha önce kayıt olunmuş.";
+                return View(p);
+            }
+
+            // 3. Profil Resmi İşlemleri
+            if (profileImage != null)
+            {
+                string extension = Path.GetExtension(profileImage.FileName);
+                string newImageName = "user_" + Guid.NewGuid() + extension;
+                string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "profiles");
+
+                if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                using (var stream = new FileStream(Path.Combine(folderPath, newImageName), FileMode.Create))
+                {
+                    await profileImage.CopyToAsync(stream);
+                }
+                p.ProfileImageUrl = "/img/profiles/" + newImageName;
+            }
+
+            // 4. Varsayılan Rol ve Kayıt
+            p.Role = "Uye";
+            _userRepository.Add(p);
+
+            return RedirectToAction("Login");
         }
 
+        // --- ÇIKIŞ YAP (LOGOUT) ---
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

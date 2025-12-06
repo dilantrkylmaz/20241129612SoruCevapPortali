@@ -39,6 +39,13 @@
 
                     @if (ViewBag.Error != null)
                     {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle"></i> @ViewBag.Error
+                        </div>
+                    }
+
+                    @if (ViewBag.Error != null)
+                    {
                         <div class="alert alert-danger text-center">@ViewBag.Error</div>
                     }
 
