@@ -6,7 +6,7 @@ namespace _20241129612SoruCevapPortalı.Models
     {
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Cevap boş bırakılamaz.")]
         [Display(Name = "Cevap")]
         public string Content { get; set; }
 
@@ -14,9 +14,10 @@ namespace _20241129612SoruCevapPortalı.Models
 
         // Hangi soruya cevap verildi?
         public int QuestionId { get; set; }
-        public Question Question { get; set; }
+        public virtual Question Question { get; set; }
 
-        // Cevabı kim yazdı? (Şimdilik ismen tutabiliriz veya User ile bağlayabiliriz, basit tutalım)
-        public string AuthorName { get; set; }
+        // Cevabı kim yazdı? (Artık ID ile bağlıyoruz)
+        public int UserId { get; set; }
+        public virtual User User { get; set; }
     }
 }

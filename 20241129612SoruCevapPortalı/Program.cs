@@ -50,6 +50,12 @@ namespace _20241129612SoruCevapPortalı
             app.UseAuthorization();  // Sonra yetkilendir (Girebilir misin?)
 
             app.MapControllerRoute(
+                name: "areas",
+                pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
+            );
+
+            // 2. Bulamazsan Standart Rotalara bak
+            app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 

@@ -4,7 +4,11 @@
     {
         public int Id { get; set; }
         public string Username { get; set; }
-        public string Password { get; set; } // Gerçek hayatta şifrelenmeli ama ödev için düz metin olabilir.
-        public string Role { get; set; } // "Admin" veya "Uye"
+        public string Password { get; set; } // Şimdilik düz metin
+        public string Role { get; set; } = "Uye"; // Varsayılan rol Üye olsun
+
+        // Kullanıcının soruları ve cevapları
+        public virtual ICollection<Question> Questions { get; set; }
+        public virtual ICollection<Answer> Answers { get; set; }
     }
 }
