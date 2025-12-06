@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using _20241129612SoruCevapPortalı.Models;
+using _20241129612SoruCevapPortalı.Repositories.Abstract;
+using _20241129612SoruCevapPortalı.Repositories.Concrete;
 
 namespace _20241129612SoruCevapPortalı
 {
@@ -9,17 +12,28 @@ namespace _20241129612SoruCevapPortalı
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Veritabanı Bağlantısı (SQL Server)
-            // appsettings.json dosyasındaki "DefaultConnection" ismini kullanır.
+            // 1. Veritabanı Bağlantısı
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // 2. Servislerin Eklenmesi
+            // 2. Repository Bağlantıları (Dependency Injection)
+            // Bu satır IRepository çağrıldığında GenericRepository kullanmasını sağlar.
+            builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+            // 3. Kimlik Doğrulama (Cookie Authentication)
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Login/Index";
+                    options.AccessDeniedPath = "/Login/AccessDenied";
+                });
+
+            // 4. Controller ve View Servisleri
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
 
-            // 3. HTTP İstek Hattının Yapılandırılması
+            // 5. HTTP İstek Hattı (Pipeline)
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -31,7 +45,9 @@ namespace _20241129612SoruCevapPortalı
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            // BU SIRALAMA ÇOK ÖNEMLİ:
+            app.UseAuthentication(); // Önce kimlik doğrula (Kimsin?)
+            app.UseAuthorization();  // Sonra yetkilendir (Girebilir misin?)
 
             app.MapControllerRoute(
                 name: "default",
