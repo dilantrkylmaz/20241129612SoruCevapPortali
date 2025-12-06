@@ -1,0 +1,82 @@
+﻿@model List<_20241129612SoruCevapPortalı.Models.User>
+@{
+    ViewData["Title"] = "Üye Listesi";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Kayıtlı Üyeler</h3>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger m-3">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+        </div>
+    }
+
+    <div class="card-body p-0">
+        <table class="table table-striped projects">
+            <thead>
+                <tr>
+                    <th style="width: 5%">#</th>
+                    <th style="width: 30%">Kullanıcı Adı</th>
+                    <th style="width: 15%">Rol</th>
+                    <th style="width: 15%">Soru Sayısı</th>
+                    <th style="width: 35%" class="text-right">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>
+                            <img alt="Avatar" class="table-avatar rounded-circle" src="https://ui-avatars.com/api/?name=@item.Username&background=random" width="40">
+                            <b>@item.Username</b>
+                        </td>
+
+                        <td>
+                            @if (item.Role == "MainAdmin")
+                            {
+                                <span class="badge bg-warning text-dark p-2"><i class="fas fa-crown"></i> Ana Yönetici</span>
+                            }
+                            else if (item.Role == "Admin")
+                            {
+                                <span class="badge badge-danger p-2">Yönetici</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-success p-2">Üye</span>
+                            }
+                        </td>
+
+                        <td><span class="badge badge-info">@(item.Questions?.Count ?? 0)</span></td>
+
+                        <td class="text-right">
+                            @if (item.Role != "MainAdmin")
+                            {
+                                @if (item.Role == "Uye" || User.IsInRole("MainAdmin"))
+                                {
+                                    <a class="btn btn-danger btn-sm" href="/Admin/User/Delete/@item.Id" onclick="return confirm('Silmek istediğine emin misin?');">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </a>
+                                }
+
+                                @if (item.Role == "Uye")
+                                {
+                                    <a class="btn btn-success btn-sm" href="/Admin/User/ChangeRole/@item.Id">Yönetici Yap</a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-warning btn-sm" href="/Admin/User/ChangeRole/@item.Id">Yetkisini Al</a>
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

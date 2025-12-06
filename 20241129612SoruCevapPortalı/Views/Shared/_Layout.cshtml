@@ -34,7 +34,7 @@
                                 <span class="nav-link text-dark fw-bold">Merhaba, @User.Identity.Name</span>
                             </li>
 
-                            @if (User.IsInRole("Admin"))
+                            @if (User.IsInRole("Admin")||User.IsInRole("MainAdmin"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link btn btn-outline-danger btn-sm mx-1" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Yönetim Paneli</a>
@@ -65,7 +65,7 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-      top footer text-muted">
         <div class="container">
             &copy; 2025 - _20241129612SoruCevapPortalı - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>

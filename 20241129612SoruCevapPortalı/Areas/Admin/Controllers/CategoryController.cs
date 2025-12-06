@@ -6,7 +6,7 @@ using _20241129612SoruCevapPortalı.Repositories.Abstract;
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")] // Sadece Yöneticiler girebilir
+    [Authorize(Roles = "Admin,MainAdmin")] // Sadece Yöneticiler girebilir
     public class CategoryController : Controller
     {
         // Veritabanı ile konuşacak aracı (Repository)
@@ -34,24 +34,30 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Create(Category p)
         {
+            // 1. Önce Model Geçerli mi (Validation) kontrolü
             if (ModelState.IsValid)
             {
-                _categoryRepo.Add(p);
-                return RedirectToAction("Index");
+                try
+                {
+                    _categoryRepo.Add(p);
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    // Veritabanı hatası varsa ekrana bas
+                    return Content($"KRİTİK HATA (SQL): {ex.Message} \n\n DETAY: {ex.InnerException?.Message}");
+                }
             }
 
-            // --- HATAYI BULMAK İÇİN BU KODU EKLE ---
-            var hatalar = ModelState.Values.SelectMany(v => v.Errors);
-            foreach (var hata in hatalar)
-            {
-                // Visual Studio'nun altındaki Output penceresine hatayı yazar
-                System.Diagnostics.Debug.WriteLine("--------------------------------");
-                System.Diagnostics.Debug.WriteLine("VALIDATION HATASI: " + hata.ErrorMessage);
-                System.Diagnostics.Debug.WriteLine("--------------------------------");
-            }
-            // ----------------------------------------
+            // 2. Model Geçersizse sebebini ekrana bas
+            var hataMesajlari = ModelState.Values
+                                .SelectMany(v => v.Errors)
+                                .Select(e => e.ErrorMessage)
+                                .ToList();
 
-            return View(p);
+            string hataListesi = string.Join("\n- ", hataMesajlari);
+
+            return Content($"DOĞRULAMA (VALIDATION) HATASI VAR! Kayıt yapılmadı.\n\nSebepler:\n- {hataListesi}");
         }
         // 3. GÜNCELLEME (Mevcut veriyi bulup sayfaya gönder)
         [HttpGet]

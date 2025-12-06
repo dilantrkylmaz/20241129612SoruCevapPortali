@@ -64,30 +64,34 @@ namespace _20241129612SoruCevapPortalı
                 var services = scope.ServiceProvider;
                 try
                 {
-                    // Repository servisini çağır
                     var userRepo = services.GetRequiredService<IRepository<User>>();
 
-                    // Veritabanında Admin rolüne sahip kullanıcı var mı?
-                    var adminUser = userRepo.GetAll(x => x.Role == "Admin").FirstOrDefault();
+                    // "admin" kullanıcısı var mı?
+                    var mainAdmin = userRepo.GetAll(x => x.Username == "admin").FirstOrDefault();
 
                     // Yoksa ekle
-                    if (adminUser == null)
+                    if (mainAdmin == null)
                     {
                         userRepo.Add(new User
                         {
                             Username = "admin",
-                            Password = "123", // Test için basit şifre
-                            Role = "Admin"    // Kritik nokta burası!
+                            Password = "123",
+                            Role = "MainAdmin" // ARTIK ROLÜ FARKLI!
                         });
+                    }
+                    else if (mainAdmin.Role != "MainAdmin")
+                    {
+                        // Eğer admin var ama rolü eskiyse düzelt
+                        mainAdmin.Role = "MainAdmin";
+                        userRepo.Update(mainAdmin);
                     }
                 }
                 catch (Exception ex)
                 {
-                    // Hata olursa konsola yaz (Loglama)
-                    Console.WriteLine("Admin oluşturulurken hata: " + ex.Message);
+                    Console.WriteLine("Main Admin eklenirken hata: " + ex.Message);
                 }
             }
-            // --- OTOMATİK ADMIN EKLEME KODU (BİTİŞ) ---
+            // -------------------------------------------------
 
             app.Run();
         }

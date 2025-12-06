@@ -1,0 +1,31 @@
+﻿@model _20241129612SoruCevapPortalı.Models.Question
+@{
+    ViewData["Title"] = "Soru Sor";
+}
+
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-question-circle"></i> Yeni Soru Sor</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <div class="mb-3">
+                    <label>Konu Başlığı</label>
+                    <input type="text" asp-for="Title" class="form-control" required />
+                </div>
+                <div class="mb-3">
+                    <label>Kategori</label>
+                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+                        <option value="">-- Seçiniz --</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Sorunuz</label>
+                    <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-success">Yayınla</button>
+            </form>
+        </div>
+    </div>
+</div>

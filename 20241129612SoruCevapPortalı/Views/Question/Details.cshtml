@@ -1,0 +1,91 @@
+﻿@model _20241129612SoruCevapPortalı.Models.Question
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-4">
+
+    <div class="card mb-4 border-primary shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h4 class="text-primary m-0">@Model.Title</h4>
+
+            <div>
+                <span class="badge bg-secondary me-2">@Model.Category?.Name</span>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
+                {
+                    <a href="/Question/DeleteQuestion/@Model.Id"
+                       onclick="return confirm('Bu soruyu ve tüm cevaplarını silmek istediğine emin misin?');"
+                       class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash"></i> Soruyu Sil (Admin)
+                    </a>
+                }
+            </div>
+        </div>
+
+        <div class="card-body">
+            <p class="card-text" style="font-size: 1.1rem; white-space: pre-wrap;">@Model.Content</p>
+        </div>
+
+        <div class="card-footer text-muted small d-flex justify-content-between">
+            <span><i class="fas fa-user"></i> @(Model.User?.Username ?? "Anonim")</span>
+            <span><i class="fas fa-clock"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
+        </div>
+    </div>
+
+    <h5 class="mb-3"><i class="fas fa-comments"></i> Cevaplar (@(Model.Answers?.Count ?? 0))</h5>
+
+    @if (Model.Answers != null && Model.Answers.Count > 0)
+    {
+        foreach (var answer in Model.Answers.OrderBy(x => x.CreatedDate))
+        {
+            <div class="card mb-3 border-0 shadow-sm" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong class="text-success">@(answer.User?.Username ?? "Anonim")</strong>
+                            <small class="text-muted ms-2">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+                        </div>
+
+                        @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
+                        {
+                            <a href="/Question/DeleteAnswer/@answer.Id"
+                               onclick="return confirm('Yorumu silmek istiyor musun?');"
+                               class="text-danger text-decoration-none small">
+                                <i class="fas fa-times"></i> Sil
+                            </a>
+                        }
+                    </div>
+                    <hr class="my-2" />
+                    <p class="m-0 text-dark">@answer.Content</p>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-info">Henüz cevap yazılmamış. İlk cevabı sen yaz!</div>
+    }
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">Cevap Yaz</h6>
+                <form asp-action="CreateAnswer" method="post">
+                    <input type="hidden" name="QuestionId" value="@Model.Id" />
+                    <div class="form-group mb-3">
+                        <textarea name="Content" class="form-control" rows="3" placeholder="Bu konu hakkında ne düşünüyorsun?" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">Gönder</button>
+                </form>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning mt-4">
+            Cevap yazmak için <a href="/Account/Login">Giriş Yapmalısınız</a>.
+        </div>
+    }
+</div>
