@@ -1,0 +1,29 @@
+﻿@model _20241129612SoruCevapPortalı.Models.Category
+@{
+    ViewData["Title"] = "Kategori Düzenle";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card card-warning">
+    <div class="card-header">
+        <h3 class="card-title">Kategori Güncelle</h3>
+    </div>
+    <form method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="card-body">
+            <div class="form-group">
+                <label>Kategori Adı</label>
+                <input type="text" asp-for="Name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Açıklama</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-warning">Güncelle</button>
+            <a href="/Admin/Category/Index" class="btn btn-default float-right">İptal</a>
+        </div>
+    </form>
+</div>

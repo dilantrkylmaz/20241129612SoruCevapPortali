@@ -1,0 +1,46 @@
+﻿@model List<_20241129612SoruCevapPortalı.Models.Category>
+@{
+    ViewData["Title"] = "Kategoriler";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Kategori Yönetimi</h3>
+        <div class="card-tools">
+            <a href="/Admin/Category/Create" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Yeni Kategori
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="width: 10px">#</th>
+                    <th>Kategori Adı</th>
+                    <th>Açıklama</th>
+                    <th style="width: 150px">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Name</td>
+                        <td>@item.Description</td>
+                        <td>
+                            <a href="/Admin/Category/Edit/@item.Id" class="btn btn-info btn-sm">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+                            <a href="/Admin/Category/Delete/@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Silmek istediğine emin misin?');">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
