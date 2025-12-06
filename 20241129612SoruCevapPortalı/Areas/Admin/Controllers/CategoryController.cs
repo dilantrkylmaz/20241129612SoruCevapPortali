@@ -31,18 +31,28 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View();
         }
 
-        // 2. EKLEME (Veritabanına Kaydet)
         [HttpPost]
         public IActionResult Create(Category p)
         {
             if (ModelState.IsValid)
             {
-                _categoryRepo.Add(p); // Repository üzerinden Ekle
-                return RedirectToAction("Index"); // Listeye dön
+                _categoryRepo.Add(p);
+                return RedirectToAction("Index");
             }
+
+            // --- HATAYI BULMAK İÇİN BU KODU EKLE ---
+            var hatalar = ModelState.Values.SelectMany(v => v.Errors);
+            foreach (var hata in hatalar)
+            {
+                // Visual Studio'nun altındaki Output penceresine hatayı yazar
+                System.Diagnostics.Debug.WriteLine("--------------------------------");
+                System.Diagnostics.Debug.WriteLine("VALIDATION HATASI: " + hata.ErrorMessage);
+                System.Diagnostics.Debug.WriteLine("--------------------------------");
+            }
+            // ----------------------------------------
+
             return View(p);
         }
-
         // 3. GÜNCELLEME (Mevcut veriyi bulup sayfaya gönder)
         [HttpGet]
         public IActionResult Edit(int id)
