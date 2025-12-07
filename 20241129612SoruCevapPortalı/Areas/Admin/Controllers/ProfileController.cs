@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
+using _20241129612SoruCevapPortalı.Helpers;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
@@ -11,7 +12,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
     public class ProfileController : Controller
     {
         private readonly IRepository<User> _userRepo;
-        private readonly IWebHostEnvironment _webHostEnvironment; // Dosya kaydetmek için lazım
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public ProfileController(IRepository<User> userRepo, IWebHostEnvironment webHostEnvironment)
         {
@@ -19,17 +20,11 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-
         [HttpGet]
         public IActionResult Index()
         {
-            // Giriş yapan kullanıcının ID'sini Claims üzerinden alıyoruz
             var userIdStr = User.FindFirstValue("UserId");
-
-            if (string.IsNullOrEmpty(userIdStr))
-            {
-                return RedirectToAction("Login", "Account");
-            }
+            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account", new { area = "" });
 
             int userId = int.Parse(userIdStr);
             var user = _userRepo.GetById(userId);
@@ -37,38 +32,43 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(user);
         }
 
-        // PROFİLİ GÖSTER
         [HttpPost]
         public IActionResult Index(User p, IFormFile? ProfileImage)
         {
-            var userId = int.Parse(User.FindFirstValue("UserId"));
+            var userIdStr = User.FindFirstValue("UserId");
+            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account", new { area = "" });
+
+            var userId = int.Parse(userIdStr);
             var user = _userRepo.GetById(userId);
 
             if (user != null)
             {
-                // 1. AD VE SOYAD GÜNCELLEME (Burası eksikti, ekledik)
-                user.FirstName = p.FirstName;
-                user.LastName = p.LastName;
+                if (!string.IsNullOrEmpty(p.FirstName)) user.FirstName = p.FirstName;
+                if (!string.IsNullOrEmpty(p.LastName)) user.LastName = p.LastName;
+                if (!string.IsNullOrEmpty(p.Email)) user.Email = p.Email;
+                if (!string.IsNullOrEmpty(p.PhoneNumber)) user.PhoneNumber = p.PhoneNumber;
 
-                // 2. Diğer Bilgiler
-                user.Username = p.Username;
-                user.Email = p.Email;
-                user.PhoneNumber = p.PhoneNumber;
+              
+                if (string.IsNullOrEmpty(user.FirstName)) user.FirstName = "Sistem";
+                if (string.IsNullOrEmpty(user.LastName)) user.LastName = "Yöneticisi";
+                if (string.IsNullOrEmpty(user.Email)) user.Email = "admin@portal.com";
+                if (string.IsNullOrEmpty(user.PhoneNumber)) user.PhoneNumber = "5555555555";
 
-                // 3. Şifre Değişikliği (Boş bırakırsa eski şifre kalır)
                 if (!string.IsNullOrEmpty(p.Password))
                 {
-                    user.Password = p.Password;
+                    user.Password = SecurityHelper.HashPassword(p.Password);
                 }
 
-                // 4. Resim Yükleme İşlemi (Aynen kalsın)
+               
                 if (ProfileImage != null)
                 {
                     string extension = Path.GetExtension(ProfileImage.FileName);
                     string newImageName = "user_" + userId + "_" + Guid.NewGuid() + extension;
-                    string location = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles/", newImageName);
+                    string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "profiles");
 
-                    using (var stream = new FileStream(location, FileMode.Create))
+                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                    using (var stream = new FileStream(Path.Combine(folderPath, newImageName), FileMode.Create))
                     {
                         ProfileImage.CopyTo(stream);
                     }
@@ -76,7 +76,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 }
 
                 _userRepo.Update(user);
-                TempData["Success"] = "Profil bilgileriniz güncellendi.";
+                TempData["Success"] = "Profil başarıyla güncellendi.";
             }
 
             return RedirectToAction("Index");

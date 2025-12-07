@@ -4,10 +4,10 @@
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
+   
     public partial class KullanıcıGüncelleme : Migration
     {
-        /// <inheritdoc />
+      
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
@@ -45,7 +45,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 defaultValue: "");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

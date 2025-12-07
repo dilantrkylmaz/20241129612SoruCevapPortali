@@ -3,19 +3,16 @@
 @using _20241129612SoruCevapPortalı.Models
 @inject IRepository<User> UserRepo
 @{
-    // GARANTİ YÖNTEM: Kullanıcı adından bulma
     User currentUser = null;
     if (User.Identity.IsAuthenticated)
     {
         string currentUsername = User.Identity.Name;
         if (!string.IsNullOrEmpty(currentUsername))
         {
-            // Kullanıcıyı veritabanından çekiyoruz
             currentUser = UserRepo.Get(x => x.Username == currentUsername);
         }
     }
 
-    // Resim yoksa veya kullanıcı bulunamazsa varsayılan resim
     string userImg = (!string.IsNullOrEmpty(currentUser?.ProfileImageUrl))
         ? currentUser.ProfileImageUrl
         : "/img/default-user.png";
@@ -28,7 +25,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Yönetici Paneli | Soru Cevap Portalı</title>
+    <title>Soru Cevap Portalı</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

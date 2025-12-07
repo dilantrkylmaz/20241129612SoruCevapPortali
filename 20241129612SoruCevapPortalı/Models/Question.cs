@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations; // Bunu eklemeyi unutma
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace _20241129612SoruCevapPortalı.Models
 {
@@ -14,17 +14,15 @@ namespace _20241129612SoruCevapPortalı.Models
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        // --- İLİŞKİLER (Soru İşaretlerini Ekledik) ---
 
         public int CategoryId { get; set; }
 
-        // ? işareti, "Validation yaparken bu nesne boş olabilir" demektir.
         public virtual Category? Category { get; set; }
 
         public int UserId { get; set; }
 
-        public virtual User? User { get; set; } // Soru işareti eklendi
+        public virtual User? User { get; set; } 
 
-        public virtual ICollection<Answer>? Answers { get; set; } // Soru işareti eklendi
+        public virtual ICollection<Answer>? Answers { get; set; } 
     }
 }

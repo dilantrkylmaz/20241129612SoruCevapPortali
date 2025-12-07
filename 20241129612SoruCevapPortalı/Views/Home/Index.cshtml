@@ -1,61 +1,94 @@
 ﻿@model List<_20241129612SoruCevapPortalı.Models.Question>
+
 @{
     ViewData["Title"] = "Ana Sayfa";
+
+    // Renk paleti
+    string[] renkler = { "primary", "success", "danger", "warning", "info", "dark" };
+    int sayac = 0;
 }
+
+<div class="p-5 mb-4 bg-primary text-white rounded-3 text-center shadow">
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <h1 class="display-5 fw-bold">
+            Hoş Geldin, <span class="text-capitalize">@User.Identity.Name</span>!
+        </h1>
+    }
+    else
+    {
+        <h1 class="display-5 fw-bold">Hoş Geldiniz!</h1>
+    }
+
+    <p class="fs-4">Merak ettiklerinizi sorun, bildiklerinizi paylaşın.</p>
+
+    <a asp-controller="Question" asp-action="Create" class="btn btn-warning btn-lg fw-bold px-4 shadow-sm">Hemen Soru Sor</a>
+</div>
 
 <div class="row">
     <div class="col-md-3">
-        <div class="card shadow-sm mb-3">
-            <div class="card-header bg-dark text-white">
-                <i class="fas fa-bars"></i> Menü
-            </div>
-            <div class="list-group list-group-flush">
-                <a href="/Question/Create" class="list-group-item list-group-item-action bg-success text-white fw-bold">
-                    <i class="fas fa-plus-circle"></i> Soru Sor
-                </a>
-                <a href="/" class="list-group-item list-group-item-action">
-                    <i class="fas fa-stream"></i> Tüm Sorular
-                </a>
-            </div>
+        <div class="list-group shadow-sm">
+            <div class="list-group-item bg-dark text-white fw-bold">Menü</div>
+
+            <a asp-controller="Question" asp-action="Create" class="list-group-item list-group-item-action text-success fw-bold">
+                <i class="bi bi-plus-circle"></i> Soru Sor
+            </a>
+
+            <a href="#" class="list-group-item list-group-item-action active" onclick="return false;">
+                Tüm Sorular
+            </a>
+        </div>
+
+        <div class="alert alert-info mt-3 text-center shadow-sm small">
+            Topluluk kurallarına uymayı unutmayın.
         </div>
     </div>
 
     <div class="col-md-9">
-        <h4 class="mb-3">Son Paylaşımlar</h4>
+        <h3 class="mb-3">Son Paylaşımlar</h3>
 
-        @if (Model.Count == 0)
+        @if (Model != null && Model.Count > 0)
         {
-            <div class="alert alert-info text-center">
-                Henüz hiç soru sorulmamış. İlk soruyu sen sor!
-            </div>
-        }
+            @foreach (var item in Model)
+            {
+                string aktifRenk = renkler[sayac % renkler.Length];
+                sayac++;
 
-        @foreach (var item in Model)
-        {
-            <div class="card mb-3 shadow-sm border-0">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <a href="/Question/Details/@item.Id" class="h5 text-decoration-none text-primary fw-bold stretched-link">
-                            @item.Title
-                        </a>
-                        <span class="badge bg-secondary">@item.Category?.Name</span>
-                    </div>
-
-                    <p class="card-text text-muted text-truncate" style="max-width: 100%;">
-                        @item.Content
-                    </p>
-
-                    <div class="d-flex justify-content-between align-items-center mt-3 small text-muted border-top pt-2">
-                        <div>
-                            <i class="fas fa-user-circle"></i> @(item.User?.Username ?? "Misafir")
-                            <span class="mx-2">|</span>
-                            <i class="far fa-clock"></i> @item.CreatedDate.ToString("dd.MM.yyyy HH:mm")
+                <div class="card mb-3 shadow-sm border-start border-5 border-@aktifRenk">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-@aktifRenk rounded-pill">
+                                @(item.Category != null ? item.Category.Name : "Genel")
+                            </span>
+                            <small class="text-muted">@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
                         </div>
-                        <div>
-                            <i class="fas fa-comment-dots"></i> @(item.Answers?.Count ?? 0) Cevap
+
+                        <h5 class="card-title fw-bold text-dark">
+                            @item.Title
+                        </h5>
+
+                        <p class="card-text text-secondary">
+                            @item.Content
+                        </p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <small class="text-muted fw-bold">
+                                Yazar: <span class="text-capitalize">@(item.User != null ? item.User.Id : "Anonim")</span>
+                            </small>
+
+                            <a asp-controller="Question" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-@aktifRenk btn-sm px-3 fw-bold">
+                                Cevapları Gör
+                            </a>
                         </div>
                     </div>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning text-center shadow-sm">
+                Henüz hiç soru sorulmamış. İlk soruyu sen sor!
             </div>
         }
     </div>

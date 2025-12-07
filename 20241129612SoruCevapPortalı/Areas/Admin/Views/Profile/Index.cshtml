@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Profilim";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
-    // Varsayılan resim yoksa avatar kullan
     string resimUrl = string.IsNullOrEmpty(Model.ProfileImageUrl)
         ? $"https://ui-avatars.com/api/?name={Model.Username}&size=128&background=random"
         : Model.ProfileImageUrl;
@@ -30,7 +29,7 @@
                     <div class="alert alert-success">@TempData["Success"]</div>
                 }
 
-                <form asp-action="Update" method="post" enctype="multipart/form-data" class="mt-4">
+                <form asp-action="Index" method="post" enctype="multipart/form-data" class="mt-4">
                     <input type="hidden" asp-for="Id" />
 
                     <div class="form-group row">

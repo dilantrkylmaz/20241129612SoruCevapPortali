@@ -6,7 +6,7 @@ using _20241129612SoruCevapPortalı.Repositories.Abstract;
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin,MainAdmin")] // Sadece Admin girebilir
+    [Authorize(Roles = "Admin,MainAdmin")]
     public class UserController : Controller
     {
         private readonly IRepository<User> _userRepo;
@@ -16,14 +16,11 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             _userRepo = userRepo;
         }
 
-        // 1. ÜYE LİSTESİ
         [HttpGet]
-        // UserController.cs -> Index Metodu
         public IActionResult Index(string search, string role)
         {
-            var users = _userRepo.GetAll(); // Tüm kullanıcılar
+            var users = _userRepo.GetAll(); 
 
-            // Arama Filtresi
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -35,7 +32,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 ).ToList();
             }
 
-            // Rol Filtresi
             if (!string.IsNullOrEmpty(role))
             {
                 users = users.Where(x => x.Role == role).ToList();
@@ -44,28 +40,24 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(users);
         }
 
-        // 2. ÜYE SİLME
         public IActionResult Delete(int id)
         {
             var user = _userRepo.GetById(id);
             if (user != null)
             {
-                // 1. KİMSE MAIN ADMIN'İ SİLEMEZ
                 if (user.Role == "MainAdmin")
                 {
                     TempData["Error"] = "Ana Yönetici silinemez!";
                     return RedirectToAction("Index");
                 }
 
-                // 2. KİMSE KENDİNİ SİLEMEZ
                 if (user.Username == User.Identity.Name)
                 {
                     TempData["Error"] = "Kendini silemezsin!";
                     return RedirectToAction("Index");
                 }
 
-                // 3. ALT YÖNETİCİLER (Admin), DİĞER YÖNETİCİLERİ SİLEMEZ
-                // Sadece MainAdmin herkesi silebilir.
+                
                 if (user.Role == "Admin" && !User.IsInRole("MainAdmin"))
                 {
                     TempData["Error"] = "Yöneticileri silme yetkiniz yok!";
@@ -77,41 +69,36 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
-        // 3. ROL DEĞİŞTİRME
         public IActionResult ChangeRole(int id)
         {
             var user = _userRepo.GetById(id);
             if (user != null)
             {
-                // MAIN ADMIN ROLÜ DEĞİŞMEZ
                 if (user.Role == "MainAdmin")
                 {
                     TempData["Error"] = "Ana Yöneticinin rolü değiştirilemez!";
                     return RedirectToAction("Index");
                 }
 
-                // KENDİ ROLÜNÜ DEĞİŞTİRME
                 if (user.Username == User.Identity.Name)
                 {
                     TempData["Error"] = "Kendi yetkini değiştiremezsin!";
                     return RedirectToAction("Index");
                 }
 
-                // --- ROL DÖNGÜSÜ (Toggle) ---
                 if (user.Role == "Admin")
                 {
-                    user.Role = "Uye"; // Admin -> Üye oldu
+                    user.Role = "Uye"; 
                 }
                 else
                 {
-                    user.Role = "Admin"; // Üye -> Admin oldu
+                    user.Role = "Admin"; 
                 }
 
                 _userRepo.Update(user);
             }
             return RedirectToAction("Index");
         }
-        // 4. ÜYE DÜZENLEME SAYFASI (GET)
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -121,7 +108,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 return RedirectToAction("Index");
             }
 
-            // MainAdmin dışındakiler MainAdmin'i düzenleyemesin
             if (user.Role == "MainAdmin" && !User.IsInRole("MainAdmin"))
             {
                 TempData["Error"] = "Ana Yöneticinin bilgilerini düzenleyemezsiniz!";
@@ -131,28 +117,24 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(user);
         }
 
-        // 5. ÜYE DÜZENLEME İŞLEMİ (POST)
         [HttpPost]
         public IActionResult Edit(User p)
         {
             var user = _userRepo.GetById(p.Id);
             if (user != null)
             {
-                // Temel Bilgileri Güncelle
                 user.FirstName = p.FirstName;
                 user.LastName = p.LastName;
                 user.Username = p.Username;
                 user.Email = p.Email;
                 user.PhoneNumber = p.PhoneNumber;
 
-                // Şifre alanı boş değilse şifreyi de güncelle (Boşsa eskisi kalsın)
                 if (!string.IsNullOrEmpty(p.Password))
                 {
                     user.Password = p.Password;
                 }
 
-                // Rolü de buradan güncelleyebilsin (İsteğe bağlı)
-                // user.Role = p.Role; 
+              
 
                 _userRepo.Update(user);
                 TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";

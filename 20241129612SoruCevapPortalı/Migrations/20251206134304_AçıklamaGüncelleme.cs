@@ -4,10 +4,8 @@
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
     public partial class AçıklamaGüncelleme : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
@@ -19,7 +17,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 oldType: "nvarchar(max)");
         }
 
-        /// <inheritdoc />
+    
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(

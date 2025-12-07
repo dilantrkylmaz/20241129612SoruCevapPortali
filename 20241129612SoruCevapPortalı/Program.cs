@@ -12,15 +12,12 @@ namespace _20241129612SoruCevapPortalı
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // 1. Veritabanı Bağlantısı
+          
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // 2. Repository Bağlantıları (Dependency Injection)
-            // Bu satır IRepository çağrıldığında GenericRepository kullanmasını sağlar.
             builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
-            // 3. Kimlik Doğrulama (Cookie Authentication)
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
                 {
@@ -28,12 +25,11 @@ namespace _20241129612SoruCevapPortalı
                     options.AccessDeniedPath = "/Login/AccessDenied";
                 });
 
-            // 4. Controller ve View Servisleri
+            
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
 
-            // 5. HTTP İstek Hattı (Pipeline)
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -45,9 +41,9 @@ namespace _20241129612SoruCevapPortalı
 
             app.UseRouting();
 
-            // BU SIRALAMA ÇOK ÖNEMLİ:
-            app.UseAuthentication(); // Önce kimlik doğrula (Kimsin?)
-            app.UseAuthorization();  // Sonra yetkilendir (Girebilir misin?)
+            
+            app.UseAuthentication();
+            app.UseAuthorization(); 
 
             app.MapControllerRoute(
                 name: "areas",
@@ -58,7 +54,7 @@ namespace _20241129612SoruCevapPortalı
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-            // --- OTOMATİK ADMIN EKLEME KODU (BAŞLANGIÇ) ---
+      
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -66,22 +62,24 @@ namespace _20241129612SoruCevapPortalı
                 {
                     var userRepo = services.GetRequiredService<IRepository<User>>();
 
-                    // "admin" kullanıcısı var mı?
                     var mainAdmin = userRepo.GetAll(x => x.Username == "admin").FirstOrDefault();
 
-                    // Yoksa ekle
                     if (mainAdmin == null)
                     {
                         userRepo.Add(new User
                         {
                             Username = "admin",
-                            Password = "123",
-                            Role = "MainAdmin" // ARTIK ROLÜ FARKLI!
+                            Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword("123"),
+                            Role = "MainAdmin", 
+
+                            FirstName = "Sistem",
+                            LastName = "Yöneticisi",
+                            Email = "admin@sorucevapportali.com",
+                            PhoneNumber = "5555555555"
                         });
                     }
                     else if (mainAdmin.Role != "MainAdmin")
                     {
-                        // Eğer admin var ama rolü eskiyse düzelt
                         mainAdmin.Role = "MainAdmin";
                         userRepo.Update(mainAdmin);
                     }
@@ -91,7 +89,7 @@ namespace _20241129612SoruCevapPortalı
                     Console.WriteLine("Main Admin eklenirken hata: " + ex.Message);
                 }
             }
-            // -------------------------------------------------
+           
 
             app.Run();
         }

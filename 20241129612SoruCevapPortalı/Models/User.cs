@@ -16,7 +16,6 @@ namespace _20241129612SoruCevapPortalı.Models
 
         public string Role { get; set; } = "Uye";
 
-        // --- YENİ EKLENEN ZORUNLU ALANLAR ---
 
         [Required(ErrorMessage = "Ad alanı zorunludur")]
         public string FirstName { get; set; }
@@ -32,14 +31,12 @@ namespace _20241129612SoruCevapPortalı.Models
         [Phone(ErrorMessage = "Geçerli bir telefon giriniz")]
         public string PhoneNumber { get; set; }
 
-        // Profil resmi ZORUNLU DEĞİL (?)
         public string? ProfileImageUrl { get; set; }
 
-        // İlişkiler
+  
         public virtual ICollection<Question>? Questions { get; set; }
         public virtual ICollection<Answer>? Answers { get; set; }
 
-        // Ad Soyad Birleştirme Yardımcısı
         public string FullName => $"{FirstName} {LastName}";
     }
 }

@@ -19,10 +19,8 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult Index(string searchQuestion, string searchUser)
         {
-            // Önce tüm cevapları ilişkileriyle (Soru ve Üye) beraber çekiyoruz
             var answers = _repo.GetAll(x => x.User, x => x.Question);
 
-            // 1. Soru Başlığına Göre Filtrele
             if (!string.IsNullOrEmpty(searchQuestion))
             {
                 searchQuestion = searchQuestion.ToLower();
@@ -32,7 +30,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 ).ToList();
             }
 
-            // 2. Cevap Veren Üyeye Göre Filtrele
             if (!string.IsNullOrEmpty(searchUser))
             {
                 searchUser = searchUser.ToLower();

@@ -16,7 +16,6 @@ namespace _20241129612SoruCevapPortalı.Repositories.Concrete
             _dbSet = _context.Set<T>();
         }
 
-        // Hem düz listeleme hem de Include işlemini bu metod tek başına yapar
         public List<T> GetAll(params Expression<Func<T, object>>[] includes)
         {
             IQueryable<T> query = _dbSet;

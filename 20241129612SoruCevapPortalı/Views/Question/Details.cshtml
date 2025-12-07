@@ -1,91 +1,149 @@
 ﻿@model _20241129612SoruCevapPortalı.Models.Question
+
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = "Soru Detayı";
 }
 
-<div class="container mt-4">
+<div class="container mt-5">
 
-    <div class="card mb-4 border-primary shadow-sm">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h4 class="text-primary m-0">@Model.Title</h4>
-
-            <div>
-                <span class="badge bg-secondary me-2">@Model.Category?.Name</span>
-
-                @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
-                {
-                    <a href="/Question/DeleteQuestion/@Model.Id"
-                       onclick="return confirm('Bu soruyu ve tüm cevaplarını silmek istediğine emin misin?');"
-                       class="btn btn-danger btn-sm">
-                        <i class="fas fa-trash"></i> Soruyu Sil (Admin)
-                    </a>
-                }
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">@Model.Title</h4>
+            <span class="badge bg-light text-primary">@Model.Category?.Name</span>
+        </div>
+        <div class="card-body">
+            <p class="card-text lead">@Model.Content</p>
+            <hr />
+            <div class="d-flex justify-content-between text-muted small">
+                <span>
+                    <i class="fa fa-user"></i> Soru Sahibi: <strong>@Model.User?.Username</strong>
+                </span>
+                <span>
+                    <i class="fa fa-calendar"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")
+                </span>
             </div>
         </div>
-
-        <div class="card-body">
-            <p class="card-text" style="font-size: 1.1rem; white-space: pre-wrap;">@Model.Content</p>
-        </div>
-
-        <div class="card-footer text-muted small d-flex justify-content-between">
-            <span><i class="fas fa-user"></i> @(Model.User?.Username ?? "Anonim")</span>
-            <span><i class="fas fa-clock"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
-        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
+        {
+            <div class="card-footer text-end">
+                <a href="/Question/DeleteQuestion/@Model.Id" class="btn btn-danger btn-sm" onclick="return confirm('Silmek istediğine emin misin?');">
+                    <i class="fa fa-trash"></i> Soruyu Sil
+                </a>
+            </div>
+        }
     </div>
 
-    <h5 class="mb-3"><i class="fas fa-comments"></i> Cevaplar (@(Model.Answers?.Count ?? 0))</h5>
+    <h5 class="mb-3"><i class="fa fa-comments"></i> Cevaplar</h5>
 
-    @if (Model.Answers != null && Model.Answers.Count > 0)
-    {
-        foreach (var answer in Model.Answers.OrderBy(x => x.CreatedDate))
+    <div id="answersList">
+        @if (Model.Answers != null && Model.Answers.Any())
         {
-            <div class="card mb-3 border-0 shadow-sm" style="background-color: #f8f9fa;">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <strong class="text-success">@(answer.User?.Username ?? "Anonim")</strong>
-                            <small class="text-muted ms-2">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+            @foreach (var answer in Model.Answers)
+            {
+                <div class="card mb-3 border-light shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <strong class="text-primary">@answer.User?.Username</strong>
+                            <small class="text-muted">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
                         </div>
+                        <p class="card-text">@answer.Content</p>
 
                         @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
                         {
-                            <a href="/Question/DeleteAnswer/@answer.Id"
-                               onclick="return confirm('Yorumu silmek istiyor musun?');"
-                               class="text-danger text-decoration-none small">
-                                <i class="fas fa-times"></i> Sil
-                            </a>
+                            <a href="/Question/DeleteAnswer/@answer.Id" class="text-danger small text-decoration-none">Sil</a>
                         }
                     </div>
-                    <hr class="my-2" />
-                    <p class="m-0 text-dark">@answer.Content</p>
                 </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-secondary" id="noAnswerAlert">
+                Henüz cevap yok. İlk cevabı sen yaz!
             </div>
         }
-    }
-    else
-    {
-        <div class="alert alert-info">Henüz cevap yazılmamış. İlk cevabı sen yaz!</div>
-    }
+    </div>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6 class="card-title">Cevap Yaz</h6>
-                <form asp-action="CreateAnswer" method="post">
-                    <input type="hidden" name="QuestionId" value="@Model.Id" />
+    <div class="card mt-5 mb-5 bg-light border-0">
+        <div class="card-body">
+            <h5 class="card-title text-success mb-3">Hızlı Cevap Yaz</h5>
+
+            @if (User.Identity.IsAuthenticated)
+            {
+                <form id="ajaxAnswerForm">
                     <div class="form-group mb-3">
-                        <textarea name="Content" class="form-control" rows="3" placeholder="Bu konu hakkında ne düşünüyorsun?" required></textarea>
+                        <textarea id="txtAnswerContent" class="form-control" rows="3" placeholder="Cevabınızı yazın..."></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary px-4">Gönder</button>
+                    <button type="button" id="btnSendAnswer" class="btn btn-success">
+                        <i class="fa fa-paper-plane"></i> Gönder
+                    </button>
+                    <span id="loadingMsg" class="text-muted ms-2" style="display:none;">Gönderiliyor...</span>
                 </form>
-            </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    Cevap yazmak için <a href="/Account/Login">giriş yapmalısınız</a>.
+                </div>
+            }
         </div>
-    }
-    else
-    {
-        <div class="alert alert-warning mt-4">
-            Cevap yazmak için <a href="/Account/Login">Giriş Yapmalısınız</a>.
-        </div>
-    }
+    </div>
+
 </div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#btnSendAnswer").click(function () {
+                var content = $("#txtAnswerContent").val();
+                var questionId = @Model.Id;
+
+                if (content.trim() === "") {
+                    alert("Boş cevap gönderilemez!");
+                    return;
+                }
+
+                $("#btnSendAnswer").prop("disabled", true);
+                $("#loadingMsg").show();
+
+                $.ajax({
+                    url: '/Question/CreateAnswerAjax', // Controller'daki metoda gider
+                    type: 'POST',
+                    data: { Content: content, QuestionId: questionId },
+                    success: function (response) {
+                        $("#loadingMsg").hide();
+                        $("#btnSendAnswer").prop("disabled", false);
+
+                        if (response.success) {
+                            // Kutuyu temizle
+                            $("#txtAnswerContent").val("");
+                            $("#noAnswerAlert").remove(); // "Cevap yok" yazısını kaldır
+
+                            // Yeni cevabı HTML olarak listeye ekle
+                            var newHtml = `
+                                <div class="card mb-3 border-success shadow-sm">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                                            <strong class="text-success">${response.username} <span class="badge bg-success" style="font-size:0.6em">YENİ</span></strong>
+                                            <small class="text-muted">${response.date}</small>
+                                        </div>
+                                        <p class="card-text">${response.content}</p>
+                                    </div>
+                                </div>`;
+
+                            $("#answersList").append(newHtml);
+                        } else {
+                            alert("Hata: " + response.message);
+                        }
+                    },
+                    error: function () {
+                        $("#loadingMsg").hide();
+                        $("#btnSendAnswer").prop("disabled", false);
+                        alert("Hata oluştu. Giriş yaptığınızdan emin olun.");
+                    }
+                });
+            });
+        });
+    </script>
+}

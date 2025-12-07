@@ -18,7 +18,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            // Veritabanından sayıları çekip ViewBag ile sayfaya taşıyoruz
             ViewBag.UserCount = _context.Users.Count();
             ViewBag.QuestionCount = _context.Questions.Count();
             ViewBag.CategoryCount = _context.Categories.Count();

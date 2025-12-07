@@ -4,10 +4,10 @@
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
+ 
     public partial class ProfilEkleme : Migration
     {
-        /// <inheritdoc />
+   
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
@@ -29,7 +29,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 nullable: true);
         }
 
-        /// <inheritdoc />
+     
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

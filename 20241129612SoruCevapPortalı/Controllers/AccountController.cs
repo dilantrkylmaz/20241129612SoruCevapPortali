@@ -18,7 +18,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // --- GİRİŞ YAP (LOGIN) ---
         [HttpGet]
         public IActionResult Login()
         {
@@ -28,8 +27,9 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(User p)
         {
-            // Kullanıcı adı ve şifre kontrolü
-            var user = _userRepository.Get(x => x.Username == p.Username && x.Password == p.Password);
+            string hashedPassword = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
+
+            var user = _userRepository.Get(x => x.Username == p.Username && x.Password == hashedPassword);
 
             if (user != null)
             {
@@ -45,7 +45,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
 
-                // Admin ise Admin panele, Üye ise anasayfaya gitsin (İsteğe bağlı)
                 if (user.Role == "MainAdmin" || user.Role == "Admin")
                 {
                     return RedirectToAction("Dashboard", "Admin");
@@ -58,7 +57,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return View();
         }
 
-        // --- KAYIT OL (REGISTER) ---
         [HttpGet]
         public IActionResult Register()
         {
@@ -68,13 +66,11 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(User p, IFormFile? profileImage)
         {
-            // Validasyon kontrolü (Modelde Required alanlar boş mu?)
             if (!ModelState.IsValid)
             {
                 return View(p);
             }
 
-            // 1. KULLANICI ADI KONTROLÜ
             var checkUsername = _userRepository.Get(x => x.Username == p.Username);
             if (checkUsername != null)
             {
@@ -82,7 +78,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 return View(p);
             }
 
-            // 2. E-POSTA KONTROLÜ
             var checkEmail = _userRepository.Get(x => x.Email == p.Email);
             if (checkEmail != null)
             {
@@ -90,7 +85,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 return View(p);
             }
 
-            // 3. Profil Resmi İşlemleri
             if (profileImage != null)
             {
                 string extension = Path.GetExtension(profileImage.FileName);
@@ -106,14 +100,17 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 p.ProfileImageUrl = "/img/profiles/" + newImageName;
             }
 
-            // 4. Varsayılan Rol ve Kayıt
+           
+            p.Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
+            
+
             p.Role = "Uye";
+
             _userRepository.Add(p);
 
             return RedirectToAction("Login");
         }
 
-        // --- ÇIKIŞ YAP (LOGOUT) ---
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

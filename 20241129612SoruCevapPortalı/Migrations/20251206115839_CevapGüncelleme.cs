@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
+   
     public partial class CevapGüncelleme : Migration
     {
-        /// <inheritdoc />
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -117,7 +117,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 column: "UserId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
