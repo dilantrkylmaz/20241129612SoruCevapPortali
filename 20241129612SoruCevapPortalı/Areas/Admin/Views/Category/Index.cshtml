@@ -51,26 +51,23 @@
     <script>
         $(document).ready(function () {
 
-            // Sil butonuna tıklandığında...
+            
             $(".btn-delete").click(function () {
-                var id = $(this).data("id"); // Butondaki ID'yi al
-                var row = $("#row_" + id);   // Silinecek satırı seç
+                var id = $(this).data("id"); 
+                var row = $("#row_" + id);   
 
-                // Emin misin diye sor (SweetAlert2 veya düz confirm)
                 if (confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
 
-                    // AJAX İsteği Başlat
                     $.ajax({
-                        type: "POST",                 // Metod tipi
-                        url: "/Admin/Category/DeleteAjax/" + id, // Gideceği adres
-                        success: function (result) {   // İşlem başarılı olursa
+                        type: "POST",                 
+                        url: "/Admin/Category/DeleteAjax/" + id, 
+                        success: function (result) {   
                             if (result.success) {
-                                // Satırı yavaşça yok et (Efektli)
                                 row.fadeOut(500, function () {
                                     $(this).remove();
                                 });
                             } else {
-                                alert(result.message); // Hata varsa uyar
+                                alert(result.message); 
                             }
                         },
                         error: function () {
