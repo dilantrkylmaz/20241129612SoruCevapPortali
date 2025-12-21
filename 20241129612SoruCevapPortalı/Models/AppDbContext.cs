@@ -13,60 +13,35 @@ namespace _20241129612SoruCevapPortalı.Models
         public DbSet<Answer> Answers { get; set; }
         public DbSet<QuestionLike> QuestionLikes { get; set; }
         public DbSet<AnswerLike> AnswerLikes { get; set; }
-
         public DbSet<Report> Reports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // 1. Cevap - Kullanıcı İlişkisi (Kritik Çözüm)
-            modelBuilder.Entity<Answer>()
-                .HasOne(x => x.User)
-                .WithMany(u => u.Answers)
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.NoAction); // Çakışmayı önlemek için eklendi
+            // --- TETİKLEYİCİLERİ EF CORE'A BİLDİRME (KRİTİK FİX) ---
 
-            // 2. Soru - Kullanıcı İlişkisi
+            // Soru tablosu için tetikleyiciyi bildir
             modelBuilder.Entity<Question>()
-                .HasOne(x => x.User)
-                .WithMany(u => u.Questions)
-                .HasForeignKey(x => x.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .ToTable(tb => tb.HasTrigger("TR_FullDeleteQuestion"));
 
-            // 3. Beğeniler (AnswerLike) İlişkileri
-            modelBuilder.Entity<AnswerLike>(entity =>
+            // Cevap tablosu için tetikleyiciyi bildir
+            modelBuilder.Entity<Answer>()
+                .ToTable(tb => tb.HasTrigger("TR_FullDeleteAnswer"));
+
+            // Kullanıcı tablosu için tetikleyiciyi bildir (Identity kullanıyorsan)
+            modelBuilder.Entity<User>()
+                .ToTable(tb => tb.HasTrigger("TR_FullDeleteUser"));
+
+            // Kategori tablosu için tetikleyiciyi bildir
+            modelBuilder.Entity<Category>()
+                .ToTable(tb => tb.HasTrigger("TR_FullDeleteCategory"));
+
+            // Daha önce yazdığımız NoAction döngüsü burada kalmaya devam etsin
+            foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             {
-                entity.HasOne(x => x.Answer)
-                    .WithMany(x => x.AnswerLikes)
-                    .HasForeignKey(x => x.AnswerId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(x => x.User)
-                    .WithMany()
-                    .HasForeignKey(x => x.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-
-            // 4. Beğeniler (QuestionLike) İlişkileri
-            modelBuilder.Entity<QuestionLike>(entity =>
-            {
-                entity.HasOne(x => x.Question)
-                    .WithMany(x => x.QuestionLikes)
-                    .HasForeignKey(x => x.QuestionId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(x => x.User)
-                    .WithMany()
-                    .HasForeignKey(x => x.UserId)
-                    .OnDelete(DeleteBehavior.NoAction);
-            });
-            modelBuilder.Entity<Report>(entity =>
-            {
-                entity.HasOne(r => r.ReporterUser).WithMany().HasForeignKey(r => r.ReporterUserId).OnDelete(DeleteBehavior.NoAction);
-                entity.HasOne(r => r.Question).WithMany().HasForeignKey(r => r.QuestionId).OnDelete(DeleteBehavior.NoAction);
-                entity.HasOne(r => r.Answer).WithMany().HasForeignKey(r => r.AnswerId).OnDelete(DeleteBehavior.NoAction);
-            });
+                relationship.DeleteBehavior = DeleteBehavior.NoAction;
+            }
         }
     }
 }

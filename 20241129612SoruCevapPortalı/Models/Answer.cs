@@ -10,6 +10,8 @@ namespace _20241129612SoruCevapPortalı.Models
         [Display(Name = "Cevap")]
         public string Content { get; set; }
 
+        public string? ImageUrl { get; set; }
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public int QuestionId { get; set; }

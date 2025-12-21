@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using _20241129612SoruCevapPortalı.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
@@ -19,10 +20,19 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index(string search, string role)
+        public async Task<IActionResult> Index(string search, string role)
         {
-            var users = _userManager.Users.ToList();
+            // 1. Kullanıcıları çekiyoruz
+            var users = await _userManager.Users.ToListAsync();
 
+            // 2. Her kullanıcı için rolü manuel eşleştiriyoruz (KRİTİK ADIM)
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                user.Role = roles.FirstOrDefault() ?? "Uye"; // Eğer rolü yoksa varsayılan 'Uye'
+            }
+
+            // 3. Arama filtresi (Roller yüklendikten sonra yapıyoruz)
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -34,6 +44,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 ).ToList();
             }
 
+            // 4. Rol filtresi
             if (!string.IsNullOrEmpty(role))
             {
                 users = users.Where(x => x.Role == role).ToList();
@@ -47,6 +58,10 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
+                // Rol kontrolü yapabilmek için rolü yüklüyoruz
+                var roles = await _userManager.GetRolesAsync(user);
+                user.Role = roles.FirstOrDefault();
+
                 if (user.Role == "MainAdmin")
                 {
                     TempData["Error"] = "Ana Yönetici silinemez!";
@@ -76,6 +91,9 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
+                var roles = await _userManager.GetRolesAsync(user);
+                user.Role = roles.FirstOrDefault();
+
                 if (user.Role == "MainAdmin")
                 {
                     TempData["Error"] = "Ana Yöneticinin rolü değiştirilemez!";
@@ -90,15 +108,15 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
                 if (user.Role == "Admin")
                 {
-                    user.Role = "Uye";
                     await _userManager.RemoveFromRoleAsync(user, "Admin");
                     await _userManager.AddToRoleAsync(user, "Uye");
+                    user.Role = "Uye";
                 }
                 else
                 {
-                    user.Role = "Admin";
                     await _userManager.RemoveFromRoleAsync(user, "Uye");
                     await _userManager.AddToRoleAsync(user, "Admin");
+                    user.Role = "Admin";
                 }
 
                 await _userManager.UpdateAsync(user);
@@ -111,10 +129,10 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var user = await _userManager.FindByIdAsync(id.ToString());
-            if (user == null)
-            {
-                return RedirectToAction("Index");
-            }
+            if (user == null) return RedirectToAction("Index");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            user.Role = roles.FirstOrDefault();
 
             if (user.Role == "MainAdmin" && !User.IsInRole("MainAdmin"))
             {
@@ -137,25 +155,21 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 user.Email = p.Email;
                 user.PhoneNumber = p.PhoneNumber;
 
-                // ŞİFRE DEĞİŞTİRME MANTIĞI DÜZELTİLDİ:
                 if (!string.IsNullOrEmpty(p.Password))
                 {
-                    // ResetPasswordAsync yerine doğrudan nesne üzerindeki hash'i güncelliyoruz
-                    // Böylece UpdateAsync çağırdığımızda yeni şifre ezilmez.
                     user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, p.Password);
                 }
 
                 var result = await _userManager.UpdateAsync(user);
                 if (result.Succeeded)
                 {
-                    TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";
+                    TempData["Success"] = "Kullanıcı bilgileri güncellendi.";
                 }
                 else
                 {
-                    TempData["Error"] = "Güncelleme sırasında bir hata oluştu.";
+                    TempData["Error"] = "Bir hata oluştu.";
                 }
             }
-
             return RedirectToAction("Index");
         }
     }

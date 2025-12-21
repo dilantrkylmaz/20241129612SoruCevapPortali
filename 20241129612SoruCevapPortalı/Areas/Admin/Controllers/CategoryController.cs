@@ -12,12 +12,12 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
     public class CategoryController : Controller
     {
         private readonly IRepository<Category> _categoryRepo;
-        private readonly AppDbContext _context; // DÜZELTME: Veritabanı context'i eklendi
+        private readonly AppDbContext _context;
 
         public CategoryController(IRepository<Category> categoryRepo, AppDbContext context)
         {
             _categoryRepo = categoryRepo;
-            _context = context; // DÜZELTME: Context constructor üzerinden enjekte edildi
+            _context = context;
         }
 
         public IActionResult Index()
@@ -27,10 +27,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         [HttpPost]
         public IActionResult Create(Category p)
@@ -44,17 +41,11 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 }
                 catch (Exception ex)
                 {
-                    return Content($"KRİTİK HATA (SQL): {ex.Message} \n\n DETAY: {ex.InnerException?.Message}");
+                    var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    return Content($"KRİTİK HATA (SQL): {errorMsg}");
                 }
             }
-
-            var hataMesajlari = ModelState.Values
-                                .SelectMany(v => v.Errors)
-                                .Select(e => e.ErrorMessage)
-                                .ToList();
-
-            string hataListesi = string.Join("\n- ", hataMesajlari);
-            return Content($"DOĞRULAMA (VALIDATION) HATASI VAR! Kayıt yapılmadı.\n\nSebepler:\n- {hataListesi}");
+            return View(p);
         }
 
         [HttpGet]
@@ -76,26 +67,30 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(p);
         }
 
-        [Authorize(Roles = "Admin,MainAdmin")]
+        // --- SİLME İŞLEMİ (DÜZELTİLDİ) ---
+        [HttpPost]
         public IActionResult Delete(int id)
         {
-            // Kategoriye bağlı soru var mı kontrolü (Güvenlik Maddesi)
-            // Artık _context nesnesi yukarıda tanımlandığı için bu satır hata vermeyecektir.
-            bool hasQuestions = _context.Questions.Any(q => q.CategoryId == id);
-
-            if (hasQuestions)
+            try
             {
-                TempData["Error"] = "Bu kategoriye ait sorular olduğu için silemezsiniz! Önce soruları başka kategoriye taşıyın veya silin.";
-                return RedirectToAction("Index");
-            }
+                // DÜZELTME: _repo yerine _categoryRepo kullanıldı
+                var category = _categoryRepo.GetById(id);
 
-            var category = _categoryRepo.GetById(id);
-            if (category != null)
-            {
+                if (category == null)
+                    return Json(new { success = false, message = "Kategori bulunamadı!" });
+
+                // Veritabanındaki Tetikleyici (Trigger) burada devreye girerek
+                // kategoriye bağlı soru, cevap ve beğenileri otomatik silecek.
                 _categoryRepo.Delete(category);
-                TempData["Success"] = "Kategori başarıyla silindi.";
+
+                return Json(new { success = true });
             }
-            return RedirectToAction("Index");
+            catch (Exception ex)
+            {
+                // Hatanın asıl nedenini yakalayıp ön yüze (JS) gönderiyoruz
+                var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Json(new { success = false, message = "Veritabanı Hatası: " + errorMsg });
+            }
         }
     }
 }

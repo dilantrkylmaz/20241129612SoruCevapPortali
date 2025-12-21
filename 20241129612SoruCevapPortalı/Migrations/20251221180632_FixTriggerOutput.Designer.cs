@@ -12,8 +12,8 @@ using _20241129612SoruCevapPortalı.Models;
 namespace _20241129612SoruCevapPortalı.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251221115832_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251221180632_FixTriggerOutput")]
+    partial class FixTriggerOutput
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,9 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
@@ -185,7 +188,38 @@ namespace _20241129612SoruCevapPortalı.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Answers");
+                    b.ToTable("Answers", t =>
+                        {
+                            t.HasTrigger("TR_FullDeleteAnswer");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.AnswerLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnswerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnswerId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AnswerLikes");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Category", b =>
@@ -226,6 +260,9 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -239,7 +276,76 @@ namespace _20241129612SoruCevapPortalı.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Questions");
+                    b.ToTable("Questions", t =>
+                        {
+                            t.HasTrigger("TR_FullDeleteQuestion");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.QuestionLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("QuestionLikes");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Report", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AnswerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReporterUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnswerId");
+
+                    b.HasIndex("QuestionId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.User", b =>
@@ -321,7 +427,12 @@ namespace _20241129612SoruCevapPortalı.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("AspNetUsers", null, t =>
+                        {
+                            t.HasTrigger("TR_FullDeleteUser");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -329,7 +440,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -338,7 +449,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -347,7 +458,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -356,13 +467,13 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -371,7 +482,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -380,7 +491,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
@@ -394,23 +505,91 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.AnswerLike", b =>
+                {
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Answer", "Answer")
+                        .WithMany("AnswerLikes")
+                        .HasForeignKey("AnswerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Answer");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Question", b =>
                 {
                     b.HasOne("_20241129612SoruCevapPortalı.Models.Category", "Category")
                         .WithMany("Questions")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
                         .WithMany("Questions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Category");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.QuestionLike", b =>
+                {
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
+                        .WithMany("QuestionLikes")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Report", b =>
+                {
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Answer", "Answer")
+                        .WithMany()
+                        .HasForeignKey("AnswerId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
+                        .WithMany()
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Answer");
+
+                    b.Navigation("Question");
+
+                    b.Navigation("ReporterUser");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Answer", b =>
+                {
+                    b.Navigation("AnswerLikes");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Category", b =>
@@ -421,6 +600,8 @@ namespace _20241129612SoruCevapPortalı.Migrations
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Question", b =>
                 {
                     b.Navigation("Answers");
+
+                    b.Navigation("QuestionLikes");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.User", b =>

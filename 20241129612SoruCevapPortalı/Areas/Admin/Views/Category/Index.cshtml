@@ -51,30 +51,47 @@
     <script>
         $(document).ready(function () {
 
-            
             $(".btn-delete").click(function () {
-                var id = $(this).data("id"); 
-                var row = $("#row_" + id);   
+                var id = $(this).data("id");
+                var row = $("#row_" + id);
 
-                if (confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
-
-                    $.ajax({
-                        type: "POST",                 
-                        url: "/Admin/Category/DeleteAjax/" + id, 
-                        success: function (result) {   
-                            if (result.success) {
-                                row.fadeOut(500, function () {
-                                    $(this).remove();
-                                });
-                            } else {
-                                alert(result.message); 
+                // SweetAlert2 ile şık bir onay kutusu
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu kategoriyi sildiğinizde içindeki tüm sorular, cevaplar ve beğeniler de silinecektir!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Evet, her şeyi sil!',
+                    cancelButtonText: 'Vazgeç'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            // DÜZELTME: Controller'daki metodun adı 'Delete' olduğu için burası da 'Delete' olmalı
+                            url: "/Admin/Category/Delete/" + id,
+                            success: function (result) {
+                                if (result.success) {
+                                    Swal.fire(
+                                        'Silindi!',
+                                        'Kategori ve ilişkili tüm veriler başarıyla temizlendi.',
+                                        'success'
+                                    );
+                                    row.fadeOut(500, function () {
+                                        $(this).remove();
+                                    });
+                                } else {
+                                    // Controller'dan gelen gerçek hata mesajını gösterir
+                                    Swal.fire('Hata!', result.message, 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire('Hata!', 'Sunucuyla iletişim kurulamadı.', 'error');
                             }
-                        },
-                        error: function () {
-                            alert("Bir hata oluştu!");
-                        }
-                    });
-                }
+                        });
+                    }
+                });
             });
         });
     </script>

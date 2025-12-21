@@ -66,13 +66,14 @@
                         </div>
 
                         <div class="mb-3">
-                            <label>Kullanıcı Adı</label>
-                            <input type="text" asp-for="UserName" class="form-control" required />
+                            <label class="form-label fw-bold">Kullanıcı Adı</label>
+                            <input asp-for="UserName" class="form-control" placeholder="Örn: yazilimci_dilan" required />
+                            <span asp-validation-for="UserName" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label>E-Posta</label>
-                            <input type="email" asp-for="Email" class="form-control" required />
+                            <label class="form-label fw-bold">E-Posta Adresi</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="mail@ornek.com" required />
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 

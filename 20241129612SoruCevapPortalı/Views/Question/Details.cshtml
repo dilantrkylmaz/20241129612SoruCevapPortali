@@ -1,138 +1,175 @@
 ﻿@model _20241129612SoruCevapPortalı.Models.Question
+@using System.Text.RegularExpressions
 @using System.Security.Claims
+
+@functions {
+    // İçerikteki linkleri ve YouTube videolarını işleyen fonksiyon
+    public string FormatContent(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return "";
+        // YouTube linklerini videoya çevirir
+        var youtubeRegex = new Regex(@"https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)");
+        content = youtubeRegex.Replace(content, "<div class='mt-2 ratio ratio-16x9'><iframe src='https://www.youtube.com/embed/$1' allowfullscreen></iframe></div>");
+        // Normal linkleri tıklanabilir yapar
+        var linkRegex = new Regex(@"(?<!src=')(https?:\/\/[^\s]+)");
+        content = linkRegex.Replace(content, "<a href='$1' target='_blank' class='text-decoration-none'>$1</a>");
+        return content;
+    }
+}
 
 @{
     ViewData["Title"] = "Soru Detayı";
-    // Giriş yapmış kullanıcının ID'sini alıyoruz
     var currentUserId = User.Identity.IsAuthenticated ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
 }
 
-<div class="container mt-5">
+<div class="card shadow-sm mb-4 border-primary">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+        <h4 class="mb-0 fw-bold">@Model.Title</h4>
+        <span class="badge bg-white text-primary">@Model.Category?.Name</span>
+    </div>
+    <div class="card-body p-4">
+        <div class="card-text lead mb-3">@Html.Raw(FormatContent(Model.Content))</div>
 
-    <div class="card shadow-sm mb-4 border-primary">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">@Model.Title</h4>
-            <div>
-                @* DÜZENLE BUTONU (Sadece sahibi/Admin görür) *@
-                @if (User.Identity.IsAuthenticated && (Model.UserId.ToString() == currentUserId || User.IsInRole("Admin") || User.IsInRole("MainAdmin")))
-                {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-warning me-2">
-                        <i class="fas fa-edit"></i> Düzenle
-                    </a>
-                }
-                <span class="badge bg-light text-primary">@Model.Category?.Name</span>
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <div class="text-center mb-4 bg-light p-2 rounded border">
+                <img src="@Model.ImageUrl" class="img-fluid rounded shadow-sm" style="max-height: 500px;" alt="Soru Görseli" />
             </div>
-        </div>
-        <div class="card-body">
-            <p class="card-text lead">@Model.Content</p>
-            <hr />
+        }
 
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="text-muted small">
-                    <span><i class="fa fa-user"></i> @Model.User?.UserName</span> |
-                    <span><i class="fa fa-calendar"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
-                </div>
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <div class="text-muted small">
+                <i class="fas fa-user-circle me-1"></i> <strong>@Model.User?.UserName</strong> |
+                <i class="far fa-calendar-alt me-1"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")
+            </div>
 
-                <div class="d-flex align-items-center">
-                    @{
-                        var hasLikedQuestion = Model.QuestionLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
-                    }
-                    <button class="btn btn-sm @(hasLikedQuestion ? "btn-primary" : "btn-outline-primary") q-like-btn" data-id="@Model.Id">
-                        <i class="fa fa-thumbs-up"></i> Faydalı Soru (<span class="q-like-count">@(Model.QuestionLikes?.Count ?? 0)</span>)
-                    </button>
+            <div class="btn-group shadow-sm">
+                @{
+                    var hasLikedQuestion = Model.QuestionLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
+                }
+                <button class="btn btn-sm @(hasLikedQuestion ? "btn-primary" : "btn-outline-primary") q-like-btn" data-id="@Model.Id">
+                    <i class="fa fa-thumbs-up"></i> Faydalı (<span class="q-like-count">@(Model.QuestionLikes?.Count ?? 0)</span>)
+                </button>
 
-                    @if (User.Identity.IsAuthenticated && Model.UserId.ToString() != currentUserId)
+                @if (User.Identity.IsAuthenticated)
+                {
+                    if (Model.UserId.ToString() == currentUserId || User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
                     {
-                        <button class="btn btn-sm btn-outline-danger ms-2 btn-report" data-q-id="@Model.Id">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm text-white">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </a>
+                    }
+                    if (Model.UserId.ToString() != currentUserId)
+                    {
+                        <button class="btn btn-outline-danger btn-sm btn-report" data-q-id="@Model.Id">
                             <i class="fas fa-flag"></i> Raporla
                         </button>
                     }
-                </div>
+                }
             </div>
         </div>
-
-        @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
-        {
-            <div class="card-footer text-end bg-transparent border-0">
-                <a href="/Question/DeleteQuestion/@Model.Id" class="btn btn-link text-danger btn-sm p-0" onclick="return confirm('Soruyu silmek istediğine emin misin?');">
-                    <i class="fa fa-trash"></i> Soruyu Sil
-                </a>
-            </div>
-        }
     </div>
+</div>
 
-    <h5 class="mb-3 text-secondary"><i class="fa fa-comments"></i> Cevaplar (@(Model.Answers?.Count ?? 0))</h5>
+<h5 class="mb-3 text-secondary fw-bold"><i class="fa fa-comments me-2"></i>Cevaplar (@(Model.Answers?.Count ?? 0))</h5>
 
-    <div id="answersList">
-        @if (Model.Answers != null && Model.Answers.Any())
+<div id="answersList">
+    @if (Model.Answers != null && Model.Answers.Any())
+    {
+        @foreach (var answer in Model.Answers.OrderByDescending(x => x.CreatedDate))
         {
-            @foreach (var answer in Model.Answers.OrderByDescending(x => x.CreatedDate))
-            {
-                <div class="card mb-3 border-light shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-                            <strong class="text-primary">@answer.User?.UserName</strong>
-                            <small class="text-muted">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+            <div class="card mb-3 border-light shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                        <strong class="text-primary">@answer.User?.UserName</strong>
+                        <small class="text-muted">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+                    <div class="card-text">@Html.Raw(FormatContent(answer.Content))</div>
+
+                    @if (!string.IsNullOrEmpty(answer.ImageUrl))
+                    {
+                        <div class="mt-3">
+                            <img src="@answer.ImageUrl" class="img-fluid rounded border" style="max-height:300px;" />
                         </div>
-                        <p class="card-text">@answer.Content</p>
+                    }
 
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="d-flex align-items-center">
-                                @{
-                                    var hasLikedAnswer = answer.AnswerLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
-                                }
-                                <button class="btn btn-sm @(hasLikedAnswer ? "btn-info text-white" : "btn-outline-info") a-like-btn" data-id="@answer.Id">
-                                    <i class="fa fa-heart"></i> Teşekkür Et (<span class="a-like-count">@(answer.AnswerLikes?.Count ?? 0)</span>)
-                                </button>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+                        <div class="d-flex gap-2">
+                            @{
+                                var hasLikedAnswer = answer.AnswerLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
+                            }
+                            <button class="btn btn-xs @(hasLikedAnswer ? "btn-info text-white" : "btn-outline-info") a-like-btn" data-id="@answer.Id">
+                                <i class="fa fa-heart"></i> Teşekkür Et (<span class="a-like-count">@(answer.AnswerLikes?.Count ?? 0)</span>)
+                            </button>
 
-                                @if (User.Identity.IsAuthenticated && answer.UserId.ToString() != currentUserId)
-                                {
-                                    <button class="btn btn-sm btn-link text-danger text-decoration-none ms-2 btn-report" data-a-id="@answer.Id">
-                                        <i class="fas fa-flag"></i> Bildir
-                                    </button>
-                                }
-                            </div>
-
-                            @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
+                            @if (User.Identity.IsAuthenticated && answer.UserId.ToString() == currentUserId)
                             {
-                                <a href="/Question/DeleteAnswer/@answer.Id" class="text-danger small text-decoration-none" onclick="return confirm('Cevabı sil?');">
-                                    <i class="fa fa-times"></i> Sil
-                                </a>
+                                <button class="btn btn-xs btn-outline-warning btn-edit-answer"
+                                        data-id="@answer.Id"
+                                        data-content="@answer.Content"
+                                        data-hasimg="@(!string.IsNullOrEmpty(answer.ImageUrl))">
+                                    <i class="fas fa-edit"></i> Düzenle
+                                </button>
                             }
                         </div>
+
+                        @if (User.Identity.IsAuthenticated && answer.UserId.ToString() != currentUserId)
+                        {
+                            <button class="btn btn-link text-danger btn-sm text-decoration-none btn-report" data-a-id="@answer.Id">
+                                <i class="fas fa-flag"></i> Bildir
+                            </button>
+                        }
                     </div>
                 </div>
-            }
+            </div>
+        }
+    }
+</div>
+
+<div class="card mt-5 mb-5 bg-white border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h5 class="card-title text-success mb-3 fw-bold">Hızlı Cevap Yaz</h5>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <form id="ajaxAnswerForm" enctype="multipart/form-data">
+                <textarea id="txtAnswerContent" class="form-control mb-3" rows="4" placeholder="Cevabınız..."></textarea>
+                <div class="mb-3">
+                    <label class="small fw-bold">Görsel Ekle (Opsiyonel)</label>
+                    <input type="file" id="answerImage" class="form-control" accept="image/*" />
+                </div>
+                <button type="button" id="btnSendAnswer" class="btn btn-success px-4 fw-bold">Gönder</button>
+            </form>
         }
         else
         {
-            <div class="alert alert-secondary" id="noAnswerAlert">
-                Henüz cevap yok. İlk cevabı sen yaz!
-            </div>
+            <div class="alert alert-warning text-center">Cevap yazmak için giriş yapmalısınız.</div>
         }
     </div>
+</div>
 
-    <div class="card mt-5 mb-5 bg-light border-0">
-        <div class="card-body">
-            <h5 class="card-title text-success mb-3">Hızlı Cevap Yaz</h5>
-            @if (User.Identity.IsAuthenticated)
-            {
-                <form id="ajaxAnswerForm">
-                    <div class="form-group mb-3">
-                        <textarea id="txtAnswerContent" class="form-control shadow-sm" rows="3" placeholder="Cevabınızı buraya detaylıca yazın..."></textarea>
-                    </div>
-                    <button type="button" id="btnSendAnswer" class="btn btn-success px-4">
-                        <i class="fa fa-paper-plane"></i> Gönder
-                    </button>
-                    <span id="loadingMsg" class="text-muted ms-2" style="display:none;">Gönderiliyor...</span>
-                </form>
-            }
-            else
-            {
-                <div class="alert alert-warning border-0 shadow-sm">
-                    Cevap yazmak için <a href="/Account/Login" class="fw-bold">giriş yapmalısınız</a>.
+<div class="modal fade" id="editAnswerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold">Cevabı Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editAnsId" />
+                <textarea id="editAnsContent" class="form-control mb-3" rows="4"></textarea>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Yeni Görsel (Opsiyonel)</label>
+                    <input type="file" id="editAnsFile" class="form-control" accept="image/*" />
                 </div>
-            }
+                <div class="form-check" id="divRemoveImg" style="display:none;">
+                    <input class="form-check-input" type="checkbox" id="chkRemoveAnsImg">
+                    <label class="form-check-label text-danger" for="chkRemoveAnsImg">Mevcut resmi kaldır</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-warning fw-bold" id="btnUpdateAnswer">Güncelle</button>
+            </div>
         </div>
     </div>
 </div>
@@ -141,20 +178,16 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-flag me-2"></i>İçeriği Raporla</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">İçeriği Raporla</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="reportQuestionId" />
                 <input type="hidden" id="reportAnswerId" />
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Neden Raporluyorsunuz?</label>
-                    <textarea id="reportReason" class="form-control" rows="3" placeholder="Spam, küfür, yanlış bilgi vb. nedenini açıklayın..."></textarea>
-                </div>
+                <textarea id="reportReason" class="form-control" rows="3" placeholder="Raporlama nedeninizi yazın..."></textarea>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
-                <button type="button" id="btnSubmitReport" class="btn btn-danger fw-bold">Raporu Yönetime Gönder</button>
+                <button type="button" class="btn btn-danger" id="btnSubmitReport">Raporu Gönder</button>
             </div>
         </div>
     </div>
@@ -163,8 +196,7 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-
-            // --- BEĞENİ SİSTEMİ ---
+            // --- BEĞENİ İŞLEMLERİ ---
             $(document).on("click", ".q-like-btn", function () {
                 var btn = $(this);
                 $.post("/Question/LikeQuestionAjax", { questionId: btn.data("id") }, function (res) {
@@ -172,7 +204,7 @@
                         btn.find(".q-like-count").text(res.count);
                         btn.toggleClass("btn-outline-primary btn-primary");
                     }
-                }).fail(function() { alert("İşlem için giriş yapmalısınız!"); });
+                });
             });
 
             $(document).on("click", ".a-like-btn", function () {
@@ -182,46 +214,63 @@
                         btn.find(".a-like-count").text(res.count);
                         btn.toggleClass("btn-outline-info btn-info text-white");
                     }
-                }).fail(function() { alert("İşlem için giriş yapmalısınız!"); });
-            });
-
-            // --- CEVAP GÖNDERME ---
-            $("#btnSendAnswer").click(function () {
-                var content = $("#txtAnswerContent").val();
-                if (content.trim() === "") { alert("Boş cevap gönderilemez!"); return; }
-                $("#btnSendAnswer").prop("disabled", true);
-                $("#loadingMsg").show();
-
-                $.post('/Question/CreateAnswerAjax', { Content: content, QuestionId: @Model.Id }, function (response) {
-                    $("#loadingMsg").hide();
-                    $("#btnSendAnswer").prop("disabled", false);
-                    if (response.success) {
-                        location.reload(); // Sayfayı yenilemek en temizi
-                    } else { alert(response.message); }
                 });
             });
 
-            // --- RAPORLAMA SİSTEMİ (4. ADIM JAVASCRIPT) ---
+            // --- YORUM DÜZENLEME MANTIĞI ---
+            $(document).on("click", ".btn-edit-answer", function() {
+                $("#editAnsId").val($(this).data("id"));
+                $("#editAnsContent").val($(this).data("content"));
+                $("#chkRemoveAnsImg").prop("checked", false);
+                $(this).data("hasimg") ? $("#divRemoveImg").show() : $("#divRemoveImg").hide();
+                $("#editAnswerModal").modal("show");
+            });
+
+            $("#btnUpdateAnswer").click(function() {
+                var formData = new FormData();
+                formData.append("id", $("#editAnsId").val());
+                formData.append("content", $("#editAnsContent").val());
+                formData.append("removeImage", $("#chkRemoveAnsImg").is(":checked"));
+                var file = $("#editAnsFile")[0].files[0];
+                if(file) formData.append("newImage", file);
+
+                $.ajax({
+                    url: '/Question/EditAnswerAjax',
+                    type: 'POST',
+                    data: formData, processData: false, contentType: false,
+                    success: function(res) { if(res.success) location.reload(); }
+                });
+            });
+
+            // --- YORUM GÖNDERME MANTIĞI ---
+            $("#btnSendAnswer").click(function () {
+                var formData = new FormData();
+                formData.append("Content", $("#txtAnswerContent").val());
+                formData.append("QuestionId", @Model.Id);
+                var file = $("#answerImage")[0].files[0];
+                if(file) formData.append("answerImage", file);
+
+                $.ajax({
+                    url: '/Question/CreateAnswerAjax',
+                    type: 'POST',
+                    data: formData, processData: false, contentType: false,
+                    success: function (res) { if (res.success) location.reload(); }
+                });
+            });
+
+            // --- RAPORLAMA ---
             $(document).on("click", ".btn-report", function() {
                 $("#reportQuestionId").val($(this).data("q-id") || "");
                 $("#reportAnswerId").val($(this).data("a-id") || "");
-                $("#reportReason").val("");
                 $("#reportModal").modal("show");
             });
 
             $("#btnSubmitReport").click(function() {
-                var qId = $("#reportQuestionId").val();
-                var aId = $("#reportAnswerId").val();
-                var reason = $("#reportReason").val();
-
-                if (reason.trim().length < 5) { alert("Lütfen daha açıklayıcı bir neden yazın."); return; }
-
-                $.post("/Question/ReportAjax", { questionId: qId, answerId: aId, reason: reason }, function(res) {
-                    if (res.success) {
-                        alert(res.message);
-                        $("#reportModal").modal("hide");
-                    } else { alert(res.message); }
-                });
+                $.post("/Question/ReportAjax", {
+                    questionId: $("#reportQuestionId").val(),
+                    answerId: $("#reportAnswerId").val(),
+                    reason: $("#reportReason").val()
+                }, function(res) { if (res.success) location.reload(); });
             });
         });
     </script>

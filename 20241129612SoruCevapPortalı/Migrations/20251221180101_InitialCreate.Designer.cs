@@ -12,8 +12,8 @@ using _20241129612SoruCevapPortalı.Models;
 namespace _20241129612SoruCevapPortalı.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251221155716_SistemlerGüncellendi")]
-    partial class SistemlerGüncellendi
+    [Migration("20251221180101_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,9 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
@@ -251,6 +254,9 @@ namespace _20241129612SoruCevapPortalı.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -419,7 +425,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -428,7 +434,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -437,7 +443,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -446,13 +452,13 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -461,7 +467,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
@@ -470,7 +476,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
                         .WithMany("Answers")
                         .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
@@ -508,7 +514,7 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.Category", "Category")
                         .WithMany("Questions")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")

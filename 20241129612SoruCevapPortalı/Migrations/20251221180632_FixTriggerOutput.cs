@@ -5,7 +5,7 @@
 namespace _20241129612SoruCevapPortalı.Migrations
 {
     /// <inheritdoc />
-    public partial class SistemlerGüncellendi : Migration
+    public partial class FixTriggerOutput : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

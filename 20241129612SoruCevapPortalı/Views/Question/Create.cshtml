@@ -1,31 +1,58 @@
 ﻿@model _20241129612SoruCevapPortalı.Models.Question
 @{
-    ViewData["Title"] = "Soru Sor";
+    ViewData["Title"] = "Yeni Soru Sor";
 }
 
-<div class="container mt-4">
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h4><i class="fas fa-question-circle"></i> Yeni Soru Sor</h4>
-        </div>
-        <div class="card-body">
-            <form method="post">
-                <div class="mb-3">
-                    <label>Konu Başlığı</label>
-                    <input type="text" asp-for="Title" class="form-control" required />
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-question-circle me-2"></i>Yeni Soru Sor</h4>
                 </div>
-                <div class="mb-3">
-                    <label>Kategori</label>
-                    <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
-                        <option value="">-- Seçiniz --</option>
-                    </select>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Soru Başlığı</label>
+                            <input asp-for="Title" class="form-control form-control-lg" placeholder="Sorunuzu kısaca özetleyin..." />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Kategori</label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories">
+                                <option value="">-- Kategori Seçin --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 p-3 bg-light rounded border border-dashed">
+                            <label class="form-label fw-bold text-dark"><i class="fas fa-image me-1"></i>Görsel veya Video Ekle (Opsiyonel)</label>
+                            <input type="file" name="mediaFile" class="form-control" accept="image/*,video/*" />
+                            <small class="text-muted">Sorunuzu destekleyecek bir görsel veya kısa video yükleyebilirsiniz.</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Soru Detayı</label>
+                            <textarea asp-for="Content" class="form-control" rows="6" placeholder="Sorunuzu burada detaylandırın..."></textarea>
+                            <span asp-validation-for="Content" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4">Vazgeç</a>
+                            <button type="submit" class="btn btn-success btn-lg px-5 fw-bold shadow-sm">Soruyu Gönder</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="mb-3">
-                    <label>Sorunuz</label>
-                    <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-success">Yayınla</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

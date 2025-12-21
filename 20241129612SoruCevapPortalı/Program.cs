@@ -1,9 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+using _20241129612SoruCevapPortalı.Hubs;
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
 using _20241129612SoruCevapPortalı.Repositories.Concrete;
-using _20241129612SoruCevapPortalı.Hubs;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace _20241129612SoruCevapPortalı
 {
@@ -31,6 +32,9 @@ namespace _20241129612SoruCevapPortalı
             .AddDefaultTokenProviders();
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+            // Program.cs içinde builder.Services kısmına ekleyin
+            builder.Services.AddTransient<IEmailSender, _20241129612SoruCevapPortalı.Services.EmailSender>();
 
             // Identity Cookie ayarları
             builder.Services.ConfigureApplicationCookie(options =>

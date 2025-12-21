@@ -12,6 +12,8 @@ namespace _20241129612SoruCevapPortalı.Models
         [Display(Name = "Soru İçeriği")]
         public string Content { get; set; }
 
+        public string? ImageUrl { get; set; }
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
 
