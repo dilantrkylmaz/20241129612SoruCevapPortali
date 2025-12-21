@@ -6,14 +6,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace _20241129612SoruCevapPortalı.Migrations
 {
     /// <inheritdoc />
-    public partial class Like : Migration
+    public partial class LikeSystemFinal : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Answers_AspNetUsers_UserId",
-                table: "Answers");
+                name: "FK_Questions_AspNetUsers_UserId",
+                table: "Questions");
 
             migrationBuilder.CreateTable(
                 name: "AnswerLikes",
@@ -86,20 +86,19 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 column: "UserId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Answers_AspNetUsers_UserId",
-                table: "Answers",
+                name: "FK_Questions_AspNetUsers_UserId",
+                table: "Questions",
                 column: "UserId",
                 principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Answers_AspNetUsers_UserId",
-                table: "Answers");
+                name: "FK_Questions_AspNetUsers_UserId",
+                table: "Questions");
 
             migrationBuilder.DropTable(
                 name: "AnswerLikes");
@@ -108,11 +107,12 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 name: "QuestionLikes");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Answers_AspNetUsers_UserId",
-                table: "Answers",
+                name: "FK_Questions_AspNetUsers_UserId",
+                table: "Questions",
                 column: "UserId",
                 principalTable: "AspNetUsers",
-                principalColumn: "Id");
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

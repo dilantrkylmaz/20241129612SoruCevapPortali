@@ -1,12 +1,13 @@
-﻿using _20241129612SoruCevapPortalı.Models;
-
-public class QuestionLike
+﻿namespace _20241129612SoruCevapPortalı.Models
 {
-    public int Id { get; set; }
-    public int QuestionId { get; set; }
-    public int UserId { get; set; }
-    public DateTime CreatedDate { get; set; } // Popülerlik hesabı için önemli
+    public class QuestionLike
+    {
+        public int Id { get; set; }
+        public int QuestionId { get; set; }
+        public int UserId { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-    public Question Question { get; set; }
-    public User User { get; set; }
+        public virtual Question Question { get; set; }
+        public virtual User User { get; set; }
+    }
 }

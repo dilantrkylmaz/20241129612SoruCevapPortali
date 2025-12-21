@@ -18,32 +18,42 @@ namespace _20241129612SoruCevapPortalı.Models
         {
             base.OnModelCreating(modelBuilder);
 
-            // --- AnswerLike İlişkileri ---
+            // 1. Cevap - Kullanıcı İlişkisi (Kritik Çözüm)
+            modelBuilder.Entity<Answer>()
+                .HasOne(x => x.User)
+                .WithMany(u => u.Answers)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.NoAction); // Çakışmayı önlemek için eklendi
+
+            // 2. Soru - Kullanıcı İlişkisi
+            modelBuilder.Entity<Question>()
+                .HasOne(x => x.User)
+                .WithMany(u => u.Questions)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // 3. Beğeniler (AnswerLike) İlişkileri
             modelBuilder.Entity<AnswerLike>(entity =>
             {
-                // Cevap silindiğinde beğeni silme (Çakışmayı önlemek için NoAction)
                 entity.HasOne(x => x.Answer)
                     .WithMany(x => x.AnswerLikes)
                     .HasForeignKey(x => x.AnswerId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Kullanıcı silindiğinde beğeni silme
                 entity.HasOne(x => x.User)
                     .WithMany()
                     .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
-            // --- QuestionLike İlişkileri ---
+            // 4. Beğeniler (QuestionLike) İlişkileri
             modelBuilder.Entity<QuestionLike>(entity =>
             {
-                // Soru silindiğinde beğeni silme
                 entity.HasOne(x => x.Question)
                     .WithMany(x => x.QuestionLikes)
                     .HasForeignKey(x => x.QuestionId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Kullanıcı silindiğinde beğeni silme
                 entity.HasOne(x => x.User)
                     .WithMany()
                     .HasForeignKey(x => x.UserId)

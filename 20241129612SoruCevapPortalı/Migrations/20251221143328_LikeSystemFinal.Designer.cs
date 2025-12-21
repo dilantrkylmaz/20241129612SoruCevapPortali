@@ -12,8 +12,8 @@ using _20241129612SoruCevapPortalı.Models;
 namespace _20241129612SoruCevapPortalı.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251221142901_Like")]
-    partial class Like
+    [Migration("20251221143328_LikeSystemFinal")]
+    partial class LikeSystemFinal
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,32 +24,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("AnswerLike", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AnswerId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AnswerId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AnswerLikes");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<int>", b =>
                 {
@@ -184,32 +158,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("QuestionLike", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("QuestionLikes");
-                });
-
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Answer", b =>
                 {
                     b.Property<int>("Id")
@@ -238,6 +186,32 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Answers");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.AnswerLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnswerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnswerId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AnswerLikes");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Category", b =>
@@ -292,6 +266,32 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Questions");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.QuestionLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("QuestionLikes");
                 });
 
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.User", b =>
@@ -376,25 +376,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("AnswerLike", b =>
-                {
-                    b.HasOne("_20241129612SoruCevapPortalı.Models.Answer", "Answer")
-                        .WithMany("AnswerLikes")
-                        .HasForeignKey("AnswerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Answer");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<int>", null)
@@ -446,25 +427,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("QuestionLike", b =>
-                {
-                    b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
-                        .WithMany("QuestionLikes")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Question");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.Answer", b =>
                 {
                     b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
@@ -476,10 +438,29 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
                         .WithMany("Answers")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Question");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.AnswerLike", b =>
+                {
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Answer", "Answer")
+                        .WithMany("AnswerLikes")
+                        .HasForeignKey("AnswerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Answer");
 
                     b.Navigation("User");
                 });
@@ -495,10 +476,29 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
                         .WithMany("Questions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("_20241129612SoruCevapPortalı.Models.QuestionLike", b =>
+                {
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.Question", "Question")
+                        .WithMany("QuestionLikes")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("_20241129612SoruCevapPortalı.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Question");
 
                     b.Navigation("User");
                 });

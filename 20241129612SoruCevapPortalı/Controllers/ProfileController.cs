@@ -24,26 +24,42 @@ namespace _20241129612SoruCevapPortalı.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(User model, string? newPassword)
+        public async Task<IActionResult> Index(User model, string? newPassword, IFormFile? profileImage)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
+            // Zorunlu alanları güncelliyoruz
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.PhoneNumber = model.PhoneNumber;
 
+            // Şifre güncelleme (Artık parametre ismiyle eşleşiyor)
             if (!string.IsNullOrEmpty(newPassword))
             {
-                // Şifreyi nesne üzerinde güncelliyoruz
+                // PasswordHasher ile doğrudan nesne üzerindeki Hash'i güncelliyoruz
                 user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, newPassword);
+            }
+
+            // Profil Resmi Yükleme Mantığı (View'da mevcut olduğu için eklendi)
+            if (profileImage != null)
+            {
+                string fileName = Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles", fileName);
+                using (var stream = new FileStream(path, FileMode.Create)) { await profileImage.CopyToAsync(stream); }
+                user.ProfileImageUrl = "/img/profiles/" + fileName;
             }
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
             {
-                TempData["Success"] = "Bilgileriniz ve şifreniz güncellendi.";
+                TempData["Success"] = "Profil bilgileriniz ve şifreniz başarıyla güncellendi.";
             }
+            else
+            {
+                TempData["Error"] = "Güncelleme sırasında bir hata oluştu.";
+            }
+
             return RedirectToAction("Index");
         }
     }
