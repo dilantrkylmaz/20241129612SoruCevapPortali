@@ -131,7 +131,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
                 if (!string.IsNullOrEmpty(p.Password))
                 {
-                    // DÜZELTME: Şifreyi kaydetmeden önce hash'liyoruz.
+                    
                     user.Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
                 }
 

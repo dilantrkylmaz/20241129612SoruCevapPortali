@@ -108,7 +108,7 @@
                 $("#loadingMsg").show();
 
                 $.ajax({
-                    url: '/Question/CreateAnswerAjax', // Controller'daki metoda gider
+                    url: '/Question/CreateAnswerAjax', 
                     type: 'POST',
                     data: { Content: content, QuestionId: questionId },
                     success: function (response) {
@@ -116,11 +116,11 @@
                         $("#btnSendAnswer").prop("disabled", false);
 
                         if (response.success) {
-                            // Kutuyu temizle
+                            
                             $("#txtAnswerContent").val("");
-                            $("#noAnswerAlert").remove(); // "Cevap yok" yazısını kaldır
+                            $("#noAnswerAlert").remove(); 
 
-                            // Yeni cevabı HTML olarak listeye ekle
+                            
                             var newHtml = `
                                 <div class="card mb-3 border-success shadow-sm">
                                     <div class="card-body">
