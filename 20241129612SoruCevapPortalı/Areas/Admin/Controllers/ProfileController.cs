@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using _20241129612SoruCevapPortalı.Models;
-using _20241129612SoruCevapPortalı.Repositories.Abstract;
-using _20241129612SoruCevapPortalı.Helpers;
+using Microsoft.AspNetCore.Identity;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
@@ -11,72 +10,64 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,MainAdmin")]
     public class ProfileController : Controller
     {
-        private readonly IRepository<User> _userRepo;
+        private readonly UserManager<User> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProfileController(IRepository<User> userRepo, IWebHostEnvironment webHostEnvironment)
+        public ProfileController(UserManager<User> userManager, IWebHostEnvironment webHostEnvironment)
         {
-            _userRepo = userRepo;
+            _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var userIdStr = User.FindFirstValue("UserId");
-            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account", new { area = "" });
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account", new { area = "" });
 
-            int userId = int.Parse(userIdStr);
-            var user = _userRepo.GetById(userId);
-
+            var user = await _userManager.FindByIdAsync(userId);
             return View(user);
         }
 
         [HttpPost]
-        public IActionResult Index(User p, IFormFile? ProfileImage)
+        public async Task<IActionResult> Index(User p, IFormFile? profileImage)
         {
-            var userIdStr = User.FindFirstValue("UserId");
-            if (string.IsNullOrEmpty(userIdStr)) return RedirectToAction("Login", "Account", new { area = "" });
-
-            var userId = int.Parse(userIdStr);
-            var user = _userRepo.GetById(userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (user != null)
             {
-                if (!string.IsNullOrEmpty(p.FirstName)) user.FirstName = p.FirstName;
-                if (!string.IsNullOrEmpty(p.LastName)) user.LastName = p.LastName;
-                if (!string.IsNullOrEmpty(p.Email)) user.Email = p.Email;
-                if (!string.IsNullOrEmpty(p.PhoneNumber)) user.PhoneNumber = p.PhoneNumber;
-
-              
-                if (string.IsNullOrEmpty(user.FirstName)) user.FirstName = "Sistem";
-                if (string.IsNullOrEmpty(user.LastName)) user.LastName = "Yöneticisi";
-                if (string.IsNullOrEmpty(user.Email)) user.Email = "admin@portal.com";
-                if (string.IsNullOrEmpty(user.PhoneNumber)) user.PhoneNumber = "5555555555";
+                user.FirstName = p.FirstName;
+                user.LastName = p.LastName;
+                user.Email = p.Email;
+                user.PhoneNumber = p.PhoneNumber;
 
                 if (!string.IsNullOrEmpty(p.Password))
                 {
-                    user.Password = SecurityHelper.HashPassword(p.Password);
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    await _userManager.ResetPasswordAsync(user, token, p.Password);
                 }
 
-               
-                if (ProfileImage != null)
+                if (profileImage != null)
                 {
-                    string extension = Path.GetExtension(ProfileImage.FileName);
-                    string newImageName = "user_" + userId + "_" + Guid.NewGuid() + extension;
+                    string extension = Path.GetExtension(profileImage.FileName);
+                    string newImageName = "user_" + user.Id + "_" + Guid.NewGuid() + extension;
                     string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "profiles");
 
                     if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
 
                     using (var stream = new FileStream(Path.Combine(folderPath, newImageName), FileMode.Create))
                     {
-                        ProfileImage.CopyTo(stream);
+                        await profileImage.CopyToAsync(stream);
                     }
                     user.ProfileImageUrl = "/img/profiles/" + newImageName;
                 }
 
-                _userRepo.Update(user);
-                TempData["Success"] = "Profil başarıyla güncellendi.";
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    TempData["Success"] = "Profil başarıyla güncellendi.";
+                }
             }
 
             return RedirectToAction("Index");

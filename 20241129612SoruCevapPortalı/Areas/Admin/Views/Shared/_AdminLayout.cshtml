@@ -163,5 +163,27 @@
         connection.start();
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <script>
+        // SignalR Hub bağlantısını oluştur (Program.cs'deki map edilen isimle aynı olmalı)
+        var connection = new signalR.HubConnectionBuilder()
+            .withUrl("/portalHub")
+            .build();
+
+        // Sunucudan (Controller'dan) gelecek olan "ReceiveNotification" mesajını dinle
+        connection.on("ReceiveNotification", function (user, title) {
+            // Yeni bir soru geldiğinde ekranda uyarı göster
+            // Not: Gerçek bir projede alert yerine Toastr gibi kütüphaneler daha şıktır.
+            alert("BİLDİRİM: " + user + " isimli kullanıcı '" + title + "' başlıklı yeni bir soru sordu!");
+        });
+
+        // Bağlantıyı başlat
+        connection.start().then(function () {
+            console.log("SignalR bağlantısı başarıyla kuruldu.");
+        }).catch(function (err) {
+            return console.error("SignalR bağlantı hatası: " + err.toString());
+        });
+    </script>
 </body>
 </html>
