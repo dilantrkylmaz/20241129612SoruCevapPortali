@@ -35,7 +35,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 searchUser = searchUser.ToLower();
                 answers = answers.Where(x =>
                     x.User != null &&
-                    (x.User.Username.ToLower().Contains(searchUser) ||
+                    (x.User.UserName.ToLower().Contains(searchUser) ||
                      x.User.FirstName.ToLower().Contains(searchUser) ||
                      x.User.LastName.ToLower().Contains(searchUser))
                 ).ToList();

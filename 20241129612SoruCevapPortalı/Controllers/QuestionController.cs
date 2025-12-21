@@ -100,7 +100,7 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return Json(new
             {
                 success = true,
-                username = User.Identity.Name,
+                UserName = User.Identity.Name,
                 content = answer.Content,
                 date = answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")
             });

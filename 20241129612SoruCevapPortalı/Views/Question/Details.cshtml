@@ -16,7 +16,7 @@
             <hr />
             <div class="d-flex justify-content-between text-muted small">
                 <span>
-                    <i class="fa fa-user"></i> Soru Sahibi: <strong>@Model.User?.Username</strong>
+                    <i class="fa fa-user"></i> Soru Sahibi: <strong>@Model.User?.UserName</strong>
                 </span>
                 <span>
                     <i class="fa fa-calendar"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")
@@ -43,7 +43,7 @@
                 <div class="card mb-3 border-light shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-                            <strong class="text-primary">@answer.User?.Username</strong>
+                            <strong class="text-primary">@answer.User?.UserName</strong>
                             <small class="text-muted">@answer.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
                         </div>
                         <p class="card-text">@answer.Content</p>
@@ -125,7 +125,7 @@
                                 <div class="card mb-3 border-success shadow-sm">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
-                                            <strong class="text-success">${response.username} <span class="badge bg-success" style="font-size:0.6em">YENİ</span></strong>
+                                            <strong class="text-success">${response.UserName} <span class="badge bg-success" style="font-size:0.6em">YENİ</span></strong>
                                             <small class="text-muted">${response.date}</small>
                                         </div>
                                         <p class="card-text">${response.content}</p>

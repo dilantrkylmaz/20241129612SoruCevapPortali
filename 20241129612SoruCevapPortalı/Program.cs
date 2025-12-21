@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
 using _20241129612SoruCevapPortalı.Repositories.Concrete;
+using _20241129612SoruCevapPortalı.Hubs;
 
 namespace _20241129612SoruCevapPortalı
 {
@@ -12,20 +13,30 @@ namespace _20241129612SoruCevapPortalı
         {
             var builder = WebApplication.CreateBuilder(args);
 
-          
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 3;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+            })
+            .AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
+
             builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
-                {
-                    options.LoginPath = "/Account/Login";
-                    options.AccessDeniedPath = "/Login/AccessDenied";
-                });
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+                options.LogoutPath = "/Account/Logout";
+            });
 
-            
+            builder.Services.AddSignalR();
             builder.Services.AddControllersWithViews();
 
             var app = builder.Build();
@@ -41,9 +52,8 @@ namespace _20241129612SoruCevapPortalı
 
             app.UseRouting();
 
-            
             app.UseAuthentication();
-            app.UseAuthorization(); 
+            app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "areas",
@@ -54,42 +64,50 @@ namespace _20241129612SoruCevapPortalı
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-      
+            app.MapHub<PortalHub>("/portalHub");
+
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 try
                 {
-                    var userRepo = services.GetRequiredService<IRepository<User>>();
+                    var userManager = services.GetRequiredService<UserManager<User>>();
+                    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
-                    var mainAdmin = userRepo.GetAll(x => x.Username == "admin").FirstOrDefault();
-
-                    if (mainAdmin == null)
+                    string[] roleNames = { "MainAdmin", "Admin", "Uye" };
+                    foreach (var roleName in roleNames)
                     {
-                        userRepo.Add(new User
+                        if (!roleManager.RoleExistsAsync(roleName).Result)
                         {
-                            Username = "admin",
-                            Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword("123"),
-                            Role = "MainAdmin", 
+                            roleManager.CreateAsync(new IdentityRole<int>(roleName)).Wait();
+                        }
+                    }
 
+                    var adminUser = userManager.FindByNameAsync("admin").Result;
+                    if (adminUser == null)
+                    {
+                        var user = new User
+                        {
+                            UserName = "admin",
+                            Email = "admin@sorucevapportali.com",
                             FirstName = "Sistem",
                             LastName = "Yöneticisi",
-                            Email = "admin@sorucevapportali.com",
-                            PhoneNumber = "5555555555"
-                        });
-                    }
-                    else if (mainAdmin.Role != "MainAdmin")
-                    {
-                        mainAdmin.Role = "MainAdmin";
-                        userRepo.Update(mainAdmin);
+                            PhoneNumber = "5555555555",
+                            Role = "MainAdmin"
+                        };
+
+                        var result = userManager.CreateAsync(user, "123").Result;
+                        if (result.Succeeded)
+                        {
+                            userManager.AddToRoleAsync(user, "MainAdmin").Wait();
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Main Admin eklenirken hata: " + ex.Message);
+                    Console.WriteLine("Hata: " + ex.Message);
                 }
             }
-           
 
             app.Run();
         }

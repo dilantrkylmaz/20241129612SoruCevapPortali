@@ -1,55 +1,42 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using _20241129612SoruCevapPortalı.Models;
-using _20241129612SoruCevapPortalı.Repositories.Abstract;
 
 namespace _20241129612SoruCevapPortalı.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly IRepository<User> _userRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AccountController(IRepository<User> userRepository, IWebHostEnvironment webHostEnvironment)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment webHostEnvironment)
         {
-            _userRepository = userRepository;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _webHostEnvironment = webHostEnvironment;
         }
 
         [HttpGet]
-        public IActionResult Login()
-        {
-            return View();
-        }
+        public IActionResult Login() => View();
 
         [HttpPost]
         public async Task<IActionResult> Login(User p)
         {
-            string hashedPassword = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
+            // Identity şifre kontrolünü kendi içinde (PasswordHash üzerinden) yapar.
+            // Password alanı NotMapped olduğu için veri tabanı sorgusuna dahil edilemez.
+            var result = await _signInManager.PasswordSignInAsync(p.UserName, p.Password, false, false);
 
-            var user = _userRepository.Get(x => x.Username == p.Username && x.Password == hashedPassword);
-
-            if (user != null)
+            if (result.Succeeded)
             {
-                var claims = new List<Claim>
+                var user = await _userManager.FindByNameAsync(p.UserName);
+
+                // Rol kontrolü yaparak yönlendirme
+                if (await _userManager.IsInRoleAsync(user, "MainAdmin") || await _userManager.IsInRoleAsync(user, "Admin"))
                 {
-                    new Claim(ClaimTypes.Name, user.Username),
-                    new Claim(ClaimTypes.Role, user.Role ?? "Uye"),
-                    new Claim("UserId", user.Id.ToString())
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties();
-
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
-
-                if (user.Role == "MainAdmin" || user.Role == "Admin")
-                {
-                    return RedirectToAction("Dashboard", "Admin");
+                    // "Admin" alanındaki (Area), "Dashboard" isimli Controller'ın "Index" metoduna git.
+                    return RedirectToAction("Index", "Dashboard", new { area = "Admin" });
                 }
-
                 return RedirectToAction("Index", "Home");
             }
 
@@ -58,32 +45,13 @@ namespace _20241129612SoruCevapPortalı.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+        public IActionResult Register() => View();
 
         [HttpPost]
-        public async Task<IActionResult> Register(User p, IFormFile? profileImage)
+        public async Task<IActionResult> Register(User model, IFormFile? profileImage)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(p);
-            }
-
-            var checkUsername = _userRepository.Get(x => x.Username == p.Username);
-            if (checkUsername != null)
-            {
-                ViewBag.Error = "Bu kullanıcı adı zaten kullanılıyor! Lütfen başka bir ad seçiniz.";
-                return View(p);
-            }
-
-            var checkEmail = _userRepository.Get(x => x.Email == p.Email);
-            if (checkEmail != null)
-            {
-                ViewBag.Error = "Bu e-posta adresi ile daha önce kayıt olunmuş.";
-                return View(p);
-            }
+            // Identity'de UserName ve Email zorunludur.
+            model.UserName = model.Email;
 
             if (profileImage != null)
             {
@@ -97,23 +65,27 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 {
                     await profileImage.CopyToAsync(stream);
                 }
-                p.ProfileImageUrl = "/img/profiles/" + newImageName;
+                model.ProfileImageUrl = "/img/profiles/" + newImageName;
             }
 
-           
-            p.Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
-            
+            // Şifreyi Identity kendi yöntemiyle hashleyerek kaydeder.
+            var result = await _userManager.CreateAsync(model, model.Password);
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(model, "Uye");
+                return RedirectToAction("Login");
+            }
 
-            p.Role = "Uye";
-
-            _userRepository.Add(p);
-
-            return RedirectToAction("Login");
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+            return View(model);
         }
 
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Login", "Account");
         }
     }

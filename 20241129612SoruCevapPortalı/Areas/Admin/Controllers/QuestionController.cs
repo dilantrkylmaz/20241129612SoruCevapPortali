@@ -1,21 +1,26 @@
-﻿using _20241129612SoruCevapPortalı.Models;
+﻿using _20241129612SoruCevapPortalı.Hubs;
+using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
-    [Area("Admin")] 
-    [Authorize(Roles = "Admin,MainAdmin")] 
+    [Area("Admin")]
+    [Authorize(Roles = "Admin,MainAdmin")]
     public class QuestionController : Controller
     {
         private readonly IRepository<Question> _repo;
-        private readonly IRepository<Category> _catRepo; 
+        private readonly IRepository<Category> _catRepo;
+        private readonly IHubContext<PortalHub> _hubContext; // SignalR Context tanımlı
 
-        public QuestionController(IRepository<Question> repo, IRepository<Category> catRepo)
+        // Constructor'da hubContext parametre olarak eklenmeli ve atanmalı
+        public QuestionController(IRepository<Question> repo, IRepository<Category> catRepo, IHubContext<PortalHub> hubContext)
         {
             _repo = repo;
             _catRepo = catRepo;
+            _hubContext = hubContext; // Atama işlemi yapıldı
         }
 
         [HttpGet]
@@ -39,7 +44,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 searchUser = searchUser.ToLower();
                 questions = questions.Where(x =>
                     x.User != null &&
-                    (x.User.Username.ToLower().Contains(searchUser) ||
+                    (x.User.UserName.ToLower().Contains(searchUser) ||
                      x.User.FirstName.ToLower().Contains(searchUser) ||
                      x.User.LastName.ToLower().Contains(searchUser))
                 ).ToList();
@@ -53,12 +58,16 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(questions);
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id) // Async yapıldı
         {
             var question = _repo.GetById(id);
             if (question != null)
             {
+                string deletedTitle = question.Title;
                 _repo.Delete(question);
+
+                // İsteğe bağlı: Soru silindiğinde de adminlere bildirim gidebilir
+                await _hubContext.Clients.All.SendAsync("ReceiveNotification", User.Identity.Name, deletedTitle + " (Soru Silindi)");
             }
             return RedirectToAction("Index");
         }

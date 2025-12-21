@@ -6,10 +6,10 @@
     User currentUser = null;
     if (User.Identity.IsAuthenticated)
     {
-        string currentUsername = User.Identity.Name;
-        if (!string.IsNullOrEmpty(currentUsername))
+        string currentUserName = User.Identity.Name;
+        if (!string.IsNullOrEmpty(currentUserName))
         {
-            currentUser = UserRepo.Get(x => x.Username == currentUsername);
+            currentUser = UserRepo.Get(x => x.UserName == currentUserName);
         }
     }
 
@@ -17,7 +17,7 @@
         ? currentUser.ProfileImageUrl
         : "/img/default-user.png";
 
-    string userName = currentUser?.FullName ?? "Yönetici";
+    string UserName = currentUser?.FullName ?? "Yönetici";
 }
 
 <!DOCTYPE html>
@@ -75,7 +75,7 @@
                              style="width: 35px; height: 35px; object-fit: cover;">
                     </div>
                     <div class="info">
-                        <a href="/Admin/Profile/Index" class="d-block">@userName</a>
+                        <a href="/Admin/Profile/Index" class="d-block">@UserName</a>
                     </div>
                 </div>
 
@@ -153,6 +153,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("/portalHub").build();
+        connection.on("ReceiveNotification", function (user, title) {
+            alert("Yeni Soru: " + user + " tarafından '" + title + "' başlığıyla bir soru soruldu!");
+            // İsterseniz burada toastr veya benzeri bir kütüphane ile daha şık bir bildirim yapabilirsiniz.
+        });
+        connection.start();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

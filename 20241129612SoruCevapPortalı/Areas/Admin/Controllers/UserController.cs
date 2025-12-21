@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Identity;
 using _20241129612SoruCevapPortalı.Models;
-using _20241129612SoruCevapPortalı.Repositories.Abstract;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
@@ -9,23 +9,25 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,MainAdmin")]
     public class UserController : Controller
     {
-        private readonly IRepository<User> _userRepo;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public UserController(IRepository<User> userRepo)
+        public UserController(UserManager<User> userManager, RoleManager<IdentityRole<int>> roleManager)
         {
-            _userRepo = userRepo;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         [HttpGet]
         public IActionResult Index(string search, string role)
         {
-            var users = _userRepo.GetAll(); 
+            var users = _userManager.Users.ToList();
 
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
                 users = users.Where(x =>
-                    x.Username.ToLower().Contains(search) ||
+                    x.UserName.ToLower().Contains(search) ||
                     x.FirstName.ToLower().Contains(search) ||
                     x.LastName.ToLower().Contains(search) ||
                     x.Email.ToLower().Contains(search)
@@ -40,9 +42,9 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(users);
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var user = _userRepo.GetById(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
                 if (user.Role == "MainAdmin")
@@ -51,27 +53,26 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                     return RedirectToAction("Index");
                 }
 
-                if (user.Username == User.Identity.Name)
+                if (user.UserName == User.Identity.Name)
                 {
                     TempData["Error"] = "Kendini silemezsin!";
                     return RedirectToAction("Index");
                 }
 
-                
                 if (user.Role == "Admin" && !User.IsInRole("MainAdmin"))
                 {
                     TempData["Error"] = "Yöneticileri silme yetkiniz yok!";
                     return RedirectToAction("Index");
                 }
 
-                _userRepo.Delete(user);
+                await _userManager.DeleteAsync(user);
             }
             return RedirectToAction("Index");
         }
 
-        public IActionResult ChangeRole(int id)
+        public async Task<IActionResult> ChangeRole(int id)
         {
-            var user = _userRepo.GetById(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
                 if (user.Role == "MainAdmin")
@@ -80,7 +81,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                     return RedirectToAction("Index");
                 }
 
-                if (user.Username == User.Identity.Name)
+                if (user.UserName == User.Identity.Name)
                 {
                     TempData["Error"] = "Kendi yetkini değiştiremezsin!";
                     return RedirectToAction("Index");
@@ -88,21 +89,26 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
                 if (user.Role == "Admin")
                 {
-                    user.Role = "Uye"; 
+                    user.Role = "Uye";
+                    await _userManager.RemoveFromRoleAsync(user, "Admin");
+                    await _userManager.AddToRoleAsync(user, "Uye");
                 }
                 else
                 {
-                    user.Role = "Admin"; 
+                    user.Role = "Admin";
+                    await _userManager.RemoveFromRoleAsync(user, "Uye");
+                    await _userManager.AddToRoleAsync(user, "Admin");
                 }
 
-                _userRepo.Update(user);
+                await _userManager.UpdateAsync(user);
             }
             return RedirectToAction("Index");
         }
+
         [HttpGet]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var user = _userRepo.GetById(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
             {
                 return RedirectToAction("Index");
@@ -118,24 +124,24 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(User p)
+        public async Task<IActionResult> Edit(User p)
         {
-            var user = _userRepo.GetById(p.Id);
+            var user = await _userManager.FindByIdAsync(p.Id.ToString());
             if (user != null)
             {
                 user.FirstName = p.FirstName;
                 user.LastName = p.LastName;
-                user.Username = p.Username;
+                user.UserName = p.UserName;
                 user.Email = p.Email;
                 user.PhoneNumber = p.PhoneNumber;
 
                 if (!string.IsNullOrEmpty(p.Password))
                 {
-                    
-                    user.Password = _20241129612SoruCevapPortalı.Helpers.SecurityHelper.HashPassword(p.Password);
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    await _userManager.ResetPasswordAsync(user, token, p.Password);
                 }
 
-                _userRepo.Update(user);
+                await _userManager.UpdateAsync(user);
                 TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";
             }
 

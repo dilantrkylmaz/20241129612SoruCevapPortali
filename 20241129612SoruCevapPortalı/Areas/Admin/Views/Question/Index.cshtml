@@ -69,7 +69,7 @@
                             <div class="d-flex align-items-center">
                                 <img src="@(!string.IsNullOrEmpty(item.User?.ProfileImageUrl) ? item.User.ProfileImageUrl : "/img/default-user.png")"
                                      class="rounded-circle mr-2" width="30" height="30" style="object-fit: cover;">
-                                <span>@(item.User?.Username ?? "Silinmiş Üye")</span>
+                                <span>@(item.User?.UserName ?? "Silinmiş Üye")</span>
                             </div>
                         </td>
 
