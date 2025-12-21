@@ -19,5 +19,7 @@ namespace _20241129612SoruCevapPortalı.Models
         public int UserId { get; set; }
 
         public virtual User? User { get; set; }
+
+        public virtual ICollection<AnswerLike> AnswerLikes { get; set; }
     }
 }

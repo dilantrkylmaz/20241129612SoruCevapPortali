@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Security.Claims;
+﻿using _20241129612SoruCevapPortalı.Hubs; // Hub erişimi için eklendi
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR; // SignalR için eklendi
-using _20241129612SoruCevapPortalı.Hubs; // Hub erişimi için eklendi
+using System.Security.Claims;
 
 namespace _20241129612SoruCevapPortalı.Controllers
 {
@@ -15,14 +15,17 @@ namespace _20241129612SoruCevapPortalı.Controllers
         private readonly IRepository<Category> _categoryRepo;
         private readonly IRepository<Answer> _answerRepo;
         private readonly IHubContext<PortalHub> _hubContext; // SignalR eklendi
+        private readonly AppDbContext _context;
 
         // Constructor güncellendi
-        public QuestionController(IRepository<Question> questionRepo, IRepository<Category> categoryRepo, IRepository<Answer> answerRepo, IHubContext<PortalHub> hubContext)
+        public QuestionController(IRepository<Question> questionRepo, IRepository<Category> categoryRepo, IRepository<Answer> answerRepo, IHubContext<PortalHub> hubContext, AppDbContext context)
         {
             _questionRepo = questionRepo;
             _categoryRepo = categoryRepo;
             _answerRepo = answerRepo;
             _hubContext = hubContext;
+            _context = context;
+
         }
 
         [Authorize]
@@ -85,6 +88,31 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 _answerRepo.Add(answer);
             }
             return RedirectToAction("Details", new { id = QuestionId });
+        }
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> LikeAnswer(int answerId)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            // Daha önce beğenmiş mi kontrol et
+            var existingLike = _context.AnswerLikes.FirstOrDefault(x => x.AnswerId == answerId && x.UserId == userId);
+
+            if (existingLike == null)
+            {
+                // Beğeni ekle
+                var like = new AnswerLike { AnswerId = answerId, UserId = userId, CreatedDate = DateTime.Now };
+                _context.AnswerLikes.Add(like);
+            }
+            else
+            {
+                // Varsa beğeniyi kaldır (Toggle özelliği)
+                _context.AnswerLikes.Remove(existingLike);
+            }
+
+            await _context.SaveChangesAsync();
+            var count = _context.AnswerLikes.Count(x => x.AnswerId == answerId);
+            return Json(new { success = true, count = count });
         }
 
         [HttpPost]

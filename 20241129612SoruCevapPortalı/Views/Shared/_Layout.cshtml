@@ -8,12 +8,23 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/_20241129612SoruCevapPortalı.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .sidebar-sticky {
+            position: sticky;
+            top: 20px;
+        }
+
+        .btn-xs {
+            padding: 1px 5px;
+            font-size: 0.75rem;
+        }
+    </style>
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index text-primary">SORU CEVAP PORTALI</a>
+                <a class="navbar-brand fw-bold text-primary" asp-area="" asp-controller="Home" asp-action="Index">SORU CEVAP PORTALI</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -31,8 +42,6 @@
                             <li class="nav-item">
                                 <span class="nav-link text-dark fw-bold me-2">Merhaba, @User.Identity.Name</span>
                             </li>
-
-                            @* KULLANICI PROFİL LİNKİ *@
                             <li class="nav-item">
                                 <a class="nav-link text-primary mx-1" asp-area="" asp-controller="Profile" asp-action="Index">
                                     <i class="fas fa-user-circle"></i> Profilim
@@ -67,10 +76,64 @@
             </div>
         </nav>
     </header>
+
     <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        <div class="row">
+            <div class="col-md-9">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+
+            <div class="col-md-3">
+                <div class="sidebar-sticky">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-dark text-white d-flex align-items-center">
+                            <i class="fas fa-fire me-2 text-warning"></i>
+                            <h6 class="mb-0">Popüler Sorular</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="btn-group w-100 mb-3" role="group">
+                                <a href="/Home/Index?period=day" class="btn btn-xs btn-outline-secondary">Gün</a>
+                                <a href="/Home/Index?period=week" class="btn btn-xs btn-outline-secondary">Hafta</a>
+                                <a href="/Home/Index?period=month" class="btn btn-xs btn-outline-secondary">Ay</a>
+                                <a href="/Home/Index?period=all" class="btn btn-xs btn-outline-secondary">Tümü</a>
+                            </div>
+
+                            <div class="list-group list-group-flush">
+                                @if (ViewBag.PopularQuestions != null)
+                                {
+                                    @foreach (var pop in (List<_20241129612SoruCevapPortalı.Models.Question>)ViewBag.PopularQuestions)
+                                    {
+                                        <a href="/Question/Details/@pop.Id" class="list-group-item list-group-item-action px-1 border-0 border-bottom">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="text-truncate me-2" style="max-width: 80%; font-size: 0.9rem;">
+                                                    <strong>@pop.Title</strong>
+                                                </div>
+                                                <span class="badge bg-primary rounded-pill" style="font-size: 0.7rem;">
+                                                    @pop.QuestionLikes?.Count <i class="fas fa-thumbs-up ms-1"></i>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted small p-2">Henüz popüler soru bulunamadı.</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4 bg-light border-0">
+                        <div class="card-body text-center py-3">
+                            <small class="text-muted">Sen de merak ettiğin soruyu sor, topluluğa katıl!</small>
+                            <a href="/Question/Create" class="btn btn-sm btn-success w-100 mt-2">Soru Sor</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer class="border-top footer text-muted bg-light mt-5">
@@ -78,6 +141,7 @@
             &copy; 2025 - Soru Cevap Portalı - <a asp-area="" asp-controller="Home" asp-action="Privacy">Gizlilik Politikası</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

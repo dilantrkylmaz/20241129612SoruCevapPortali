@@ -28,8 +28,8 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 search = search.ToLower();
                 users = users.Where(x =>
                     x.UserName.ToLower().Contains(search) ||
-                    x.FirstName.ToLower().Contains(search) ||
-                    x.LastName.ToLower().Contains(search) ||
+                    (x.FirstName != null && x.FirstName.ToLower().Contains(search)) ||
+                    (x.LastName != null && x.LastName.ToLower().Contains(search)) ||
                     x.Email.ToLower().Contains(search)
                 ).ToList();
             }
@@ -66,6 +66,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 }
 
                 await _userManager.DeleteAsync(user);
+                TempData["Success"] = "Kullanıcı başarıyla silindi.";
             }
             return RedirectToAction("Index");
         }
@@ -101,6 +102,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 }
 
                 await _userManager.UpdateAsync(user);
+                TempData["Success"] = $"{user.UserName} kullanıcısının yeni rolü: {user.Role}";
             }
             return RedirectToAction("Index");
         }
@@ -129,20 +131,32 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(p.Id.ToString());
             if (user != null)
             {
-                // Boş gönderilirse eski değerini koruyarak null hatasını engelliyoruz
-                user.FirstName = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : user.FirstName;
-                user.LastName = !string.IsNullOrEmpty(p.LastName) ? p.LastName : user.LastName;
+                user.FirstName = p.FirstName;
+                user.LastName = p.LastName;
+                user.UserName = p.UserName;
                 user.Email = p.Email;
-                user.UserName = p.Email; // UserName ile Email'i eşit tutmak Identity için sağlıklıdır
+                user.PhoneNumber = p.PhoneNumber;
+
+                // ŞİFRE DEĞİŞTİRME MANTIĞI DÜZELTİLDİ:
+                if (!string.IsNullOrEmpty(p.Password))
+                {
+                    // ResetPasswordAsync yerine doğrudan nesne üzerindeki hash'i güncelliyoruz
+                    // Böylece UpdateAsync çağırdığımızda yeni şifre ezilmez.
+                    user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, p.Password);
+                }
 
                 var result = await _userManager.UpdateAsync(user);
                 if (result.Succeeded)
                 {
-                    TempData["Success"] = "Kullanıcı güncellendi.";
-                    return RedirectToAction("Index");
+                    TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";
+                }
+                else
+                {
+                    TempData["Error"] = "Güncelleme sırasında bir hata oluştu.";
                 }
             }
-            return View(p);
+
+            return RedirectToAction("Index");
         }
     }
 }

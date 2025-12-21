@@ -31,35 +31,40 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(User p, IFormFile? profileImage)
+        public async Task<IActionResult> Index(User p, IFormFile? profileImage, string? newPassword)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user != null)
             {
-                // Boş gelirse eski veriyi koru (NULL hatasını bu engeller)
-                user.FirstName = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : user.FirstName;
-                user.LastName = !string.IsNullOrEmpty(p.LastName) ? p.LastName : user.LastName;
+                user.FirstName = p.FirstName;
+                user.LastName = p.LastName;
+                user.Email = p.Email;
                 user.PhoneNumber = p.PhoneNumber;
 
-                // Şifre güncelleme mantığı
-                if (!string.IsNullOrEmpty(p.Password))
+                // ŞİFRE DEĞİŞTİRME MANTIĞI (Düzeltildi)
+                if (!string.IsNullOrEmpty(newPassword))
                 {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    await _userManager.ResetPasswordAsync(user, token, p.Password);
+                    // ResetPasswordAsync yerine doğrudan nesne üzerindeki Hash'i güncelliyoruz
+                    user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, newPassword);
                 }
 
                 if (profileImage != null)
                 {
-                    string newImageName = "user_" + Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
-                    string path = Path.Combine(_webHostEnvironment.WebRootPath, "img/profiles", newImageName);
+                    string fileName = Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
+                    string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles", fileName);
                     using (var stream = new FileStream(path, FileMode.Create)) { await profileImage.CopyToAsync(stream); }
-                    user.ProfileImageUrl = "/img/profiles/" + newImageName;
+                    user.ProfileImageUrl = "/img/profiles/" + fileName;
                 }
 
-                await _userManager.UpdateAsync(user);
-                TempData["Success"] = "Profil başarıyla güncellendi.";
+                // Tek bir UpdateAsync ile hem profil hem şifre kaydedilir
+                var result = await _userManager.UpdateAsync(user);
+
+                if (result.Succeeded)
+                    TempData["Success"] = "Profil ve şifre başarıyla güncellendi.";
+                else
+                    TempData["Error"] = "Güncelleme sırasında bir hata oluştu.";
             }
             return RedirectToAction("Index");
         }

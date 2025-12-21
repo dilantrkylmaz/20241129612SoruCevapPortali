@@ -1,12 +1,15 @@
 ﻿@model _20241129612SoruCevapPortalı.Models.Question
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = "Soru Detayı";
+    // Giriş yapmış kullanıcının ID'sini alıyoruz (Beğeni kontrolü için)
+    var currentUserId = User.Identity.IsAuthenticated ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
 }
 
 <div class="container mt-5">
 
-    <div class="card shadow-sm mb-4">
+    <div class="card shadow-sm mb-4 border-primary">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h4 class="mb-0">@Model.Title</h4>
             <span class="badge bg-light text-primary">@Model.Category?.Name</span>
@@ -14,31 +17,42 @@
         <div class="card-body">
             <p class="card-text lead">@Model.Content</p>
             <hr />
-            <div class="d-flex justify-content-between text-muted small">
-                <span>
-                    <i class="fa fa-user"></i> Soru Sahibi: <strong>@Model.User?.UserName</strong>
-                </span>
-                <span>
-                    <i class="fa fa-calendar"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")
-                </span>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    <span><i class="fa fa-user"></i> @Model.User?.UserName</span> |
+                    <span><i class="fa fa-calendar"></i> @Model.CreatedDate.ToString("dd.MM.yyyy HH:mm")</span>
+                </div>
+
+                <div>
+                    @{
+                        var hasLikedQuestion = Model.QuestionLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
+                    }
+                    <button class="btn btn-sm @(hasLikedQuestion ? "btn-primary" : "btn-outline-primary") q-like-btn"
+                            data-id="@Model.Id">
+                        <i class="fa @(hasLikedQuestion ? "fa-thumbs-up" : "fa-thumbs-up")"></i>
+                        Faydalı Soru (<span class="q-like-count">@(Model.QuestionLikes?.Count ?? 0)</span>)
+                    </button>
+                </div>
             </div>
         </div>
+
         @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
         {
-            <div class="card-footer text-end">
-                <a href="/Question/DeleteQuestion/@Model.Id" class="btn btn-danger btn-sm" onclick="return confirm('Silmek istediğine emin misin?');">
+            <div class="card-footer text-end bg-transparent border-0">
+                <a href="/Question/DeleteQuestion/@Model.Id" class="btn btn-link text-danger btn-sm p-0" onclick="return confirm('Soruyu silmek istediğine emin misin?');">
                     <i class="fa fa-trash"></i> Soruyu Sil
                 </a>
             </div>
         }
     </div>
 
-    <h5 class="mb-3"><i class="fa fa-comments"></i> Cevaplar</h5>
+    <h5 class="mb-3 text-secondary"><i class="fa fa-comments"></i> Cevaplar (@(Model.Answers?.Count ?? 0))</h5>
 
     <div id="answersList">
         @if (Model.Answers != null && Model.Answers.Any())
         {
-            @foreach (var answer in Model.Answers)
+            @foreach (var answer in Model.Answers.OrderByDescending(x => x.CreatedDate))
             {
                 <div class="card mb-3 border-light shadow-sm">
                     <div class="card-body">
@@ -48,10 +62,22 @@
                         </div>
                         <p class="card-text">@answer.Content</p>
 
-                        @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
-                        {
-                            <a href="/Question/DeleteAnswer/@answer.Id" class="text-danger small text-decoration-none">Sil</a>
-                        }
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            @{
+                                var hasLikedAnswer = answer.AnswerLikes?.Any(x => x.UserId.ToString() == currentUserId) ?? false;
+                            }
+                            <button class="btn btn-sm @(hasLikedAnswer ? "btn-info text-white" : "btn-outline-info") a-like-btn"
+                                    data-id="@answer.Id">
+                                <i class="fa fa-heart"></i> Teşekkür Et (<span class="a-like-count">@(answer.AnswerLikes?.Count ?? 0)</span>)
+                            </button>
+
+                            @if (User.IsInRole("Admin") || User.IsInRole("MainAdmin"))
+                            {
+                                <a href="/Question/DeleteAnswer/@answer.Id" class="text-danger small text-decoration-none" onclick="return confirm('Cevabı sil?');">
+                                    <i class="fa fa-times"></i> Sil
+                                </a>
+                            }
+                        </div>
                     </div>
                 </div>
             }
@@ -72,9 +98,9 @@
             {
                 <form id="ajaxAnswerForm">
                     <div class="form-group mb-3">
-                        <textarea id="txtAnswerContent" class="form-control" rows="3" placeholder="Cevabınızı yazın..."></textarea>
+                        <textarea id="txtAnswerContent" class="form-control shadow-sm" rows="3" placeholder="Cevabınızı buraya detaylıca yazın..."></textarea>
                     </div>
-                    <button type="button" id="btnSendAnswer" class="btn btn-success">
+                    <button type="button" id="btnSendAnswer" class="btn btn-success px-4">
                         <i class="fa fa-paper-plane"></i> Gönder
                     </button>
                     <span id="loadingMsg" class="text-muted ms-2" style="display:none;">Gönderiliyor...</span>
@@ -82,8 +108,8 @@
             }
             else
             {
-                <div class="alert alert-warning">
-                    Cevap yazmak için <a href="/Account/Login">giriş yapmalısınız</a>.
+                <div class="alert alert-warning border-0 shadow-sm">
+                    Cevap yazmak ve beğenmek için <a href="/Account/Login" class="fw-bold">giriş yapmalısınız</a>.
                 </div>
             }
         </div>
@@ -92,9 +118,44 @@
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
+
+            // 1. SORU BEĞENME AJAX
+            $(document).on("click", ".q-like-btn", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+
+                $.post("/Question/LikeQuestionAjax", { questionId: id }, function (res) {
+                    if (res.success) {
+                        btn.find(".q-like-count").text(res.count);
+                        if (res.isLiked) {
+                            btn.removeClass("btn-outline-primary").addClass("btn-primary");
+                        } else {
+                            btn.removeClass("btn-primary").addClass("btn-outline-primary");
+                        }
+                    }
+                }).fail(function() { alert("İşlem için giriş yapmalısınız!"); });
+            });
+
+            // 2. CEVAP BEĞENME AJAX
+            $(document).on("click", ".a-like-btn", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+
+                $.post("/Question/LikeAnswerAjax", { answerId: id }, function (res) {
+                    if (res.success) {
+                        btn.find(".a-like-count").text(res.count);
+                        if (res.isLiked) {
+                            btn.removeClass("btn-outline-info").addClass("btn-info text-white");
+                        } else {
+                            btn.removeClass("btn-info text-white").addClass("btn-outline-info");
+                        }
+                    }
+                }).fail(function() { alert("İşlem için giriş yapmalısınız!"); });
+            });
+
+            // 3. CEVAP GÖNDERME AJAX
             $("#btnSendAnswer").click(function () {
                 var content = $("#txtAnswerContent").val();
                 var questionId = @Model.Id;
@@ -108,7 +169,7 @@
                 $("#loadingMsg").show();
 
                 $.ajax({
-                    url: '/Question/CreateAnswerAjax', 
+                    url: '/Question/CreateAnswerAjax',
                     type: 'POST',
                     data: { Content: content, QuestionId: questionId },
                     success: function (response) {
@@ -116,11 +177,9 @@
                         $("#btnSendAnswer").prop("disabled", false);
 
                         if (response.success) {
-                            
                             $("#txtAnswerContent").val("");
-                            $("#noAnswerAlert").remove(); 
+                            $("#noAnswerAlert").remove();
 
-                            
                             var newHtml = `
                                 <div class="card mb-3 border-success shadow-sm">
                                     <div class="card-body">
@@ -129,10 +188,11 @@
                                             <small class="text-muted">${response.date}</small>
                                         </div>
                                         <p class="card-text">${response.content}</p>
+                                        <small class="text-muted italic">Az önce eklendi. Beğenmek için sayfayı yenileyin.</small>
                                     </div>
                                 </div>`;
 
-                            $("#answersList").append(newHtml);
+                            $("#answersList").prepend(newHtml); // Yeni cevabı en üste ekle
                         } else {
                             alert("Hata: " + response.message);
                         }
@@ -140,7 +200,7 @@
                     error: function () {
                         $("#loadingMsg").hide();
                         $("#btnSendAnswer").prop("disabled", false);
-                        alert("Hata oluştu. Giriş yaptığınızdan emin olun.");
+                        alert("Hata oluştu.");
                     }
                 });
             });
