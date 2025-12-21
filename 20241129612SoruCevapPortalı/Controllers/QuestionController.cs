@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore; // FirstOrDefaultAsync vb. için gerekli
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace _20241129612SoruCevapPortalı.Controllers
@@ -44,103 +44,128 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!string.IsNullOrEmpty(userIdStr))
                 {
-                    p.UserId = int.Parse(userIdStr);
+                    var userId = int.Parse(userIdStr);
+                    p.UserId = userId;
                     p.CreatedDate = DateTime.Now;
+
                     _questionRepo.Add(p);
-                    await _hubContext.Clients.All.SendAsync("ReceiveNotification", User.Identity.Name, p.Title);
+
+                    // KULLANICI ADI FIX: Veritabanından gerçek UserName'i alıyoruz
+                    var user = _context.Users.Find(userId);
+                    string realUserName = user?.UserName ?? "Anonim";
+
+                    // SignalR Bildirimi (Gerçek isimle gidiyor)
+                    await _hubContext.Clients.All.SendAsync("ReceiveNotification", realUserName, p.Title);
+
                     return RedirectToAction("Index", "Home");
                 }
             }
-            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name");
+
+            // --- BURASI KRİTİK: Eğer hata varsa sayfaya geri dön ve kategorileri tekrar yükle ---
+            // Aksi takdirde "DropdownList" boş olduğu için sayfa hata verir ve buton çalışmaz.
+            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", p.CategoryId);
             return View(p);
         }
 
         public IActionResult Details(int id)
         {
-            // DÜZELTİLDİ: Beğeniler (QuestionLikes ve AnswerLikes) veritabanından çekiliyor
             var question = _questionRepo.Get(x => x.Id == id,
                 "User", "Category", "Answers", "Answers.User", "QuestionLikes", "Answers.AnswerLikes");
 
             if (question == null) return NotFound();
+
+            // POPÜLER SORULAR FIX: Detay sayfasında sağ tarafın dolması için
+            DateTime filterDate = DateTime.Now.AddMonths(-1);
+            ViewBag.PopularQuestions = _questionRepo.GetAll(x => x.QuestionLikes)
+                .Where(x => x.CreatedDate >= filterDate)
+                .OrderByDescending(x => x.QuestionLikes.Count)
+                .Take(5).ToList();
+
             return View(question);
         }
 
-        // --- BEĞENİ SİSTEMİ (AJAX UYUMLU) ---
+        // --- BEĞENİ VE AJAX METOTLARI ---
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> LikeQuestionAjax(int questionId)
         {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false });
-
-            var userId = int.Parse(userIdStr);
-            var existingLike = await _context.QuestionLikes
-                .FirstOrDefaultAsync(x => x.QuestionId == questionId && x.UserId == userId);
-
-            bool isLiked;
-            if (existingLike == null)
-            {
-                _context.QuestionLikes.Add(new QuestionLike { QuestionId = questionId, UserId = userId, CreatedDate = DateTime.Now });
-                isLiked = true;
-            }
-            else
-            {
-                _context.QuestionLikes.Remove(existingLike);
-                isLiked = false;
-            }
-
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var existingLike = await _context.QuestionLikes.FirstOrDefaultAsync(x => x.QuestionId == questionId && x.UserId == userId);
+            if (existingLike == null) _context.QuestionLikes.Add(new QuestionLike { QuestionId = questionId, UserId = userId, CreatedDate = DateTime.Now });
+            else _context.QuestionLikes.Remove(existingLike);
             await _context.SaveChangesAsync();
             var count = await _context.QuestionLikes.CountAsync(x => x.QuestionId == questionId);
-            return Json(new { success = true, isLiked = isLiked, count = count });
+            return Json(new { success = true, count = count });
         }
 
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> LikeAnswerAjax(int answerId)
         {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false });
-
-            var userId = int.Parse(userIdStr);
-            var existingLike = await _context.AnswerLikes
-                .FirstOrDefaultAsync(x => x.AnswerId == answerId && x.UserId == userId);
-
-            bool isLiked;
-            if (existingLike == null)
-            {
-                _context.AnswerLikes.Add(new AnswerLike { AnswerId = answerId, UserId = userId, CreatedDate = DateTime.Now });
-                isLiked = true;
-            }
-            else
-            {
-                _context.AnswerLikes.Remove(existingLike);
-                isLiked = false;
-            }
-
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var existingLike = await _context.AnswerLikes.FirstOrDefaultAsync(x => x.AnswerId == answerId && x.UserId == userId);
+            if (existingLike == null) _context.AnswerLikes.Add(new AnswerLike { AnswerId = answerId, UserId = userId, CreatedDate = DateTime.Now });
+            else _context.AnswerLikes.Remove(existingLike);
             await _context.SaveChangesAsync();
             var count = await _context.AnswerLikes.CountAsync(x => x.AnswerId == answerId);
-            return Json(new { success = true, isLiked = isLiked, count = count });
+            return Json(new { success = true, count = count });
         }
-
-        // --- CEVAP SİSTEMİ ---
 
         [HttpPost]
         public IActionResult CreateAnswerAjax(string Content, int QuestionId)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false, message = "Lütfen önce giriş yapınız." });
-
-            Answer answer = new Answer
-            {
-                Content = Content,
-                QuestionId = QuestionId,
-                UserId = int.Parse(userIdStr),
-                CreatedDate = DateTime.Now
-            };
-
+            var userId = int.Parse(userIdStr);
+            Answer answer = new Answer { Content = Content, QuestionId = QuestionId, UserId = userId, CreatedDate = DateTime.Now };
             _answerRepo.Add(answer);
-            return Json(new { success = true, UserName = User.Identity.Name, content = answer.Content, date = answer.CreatedDate.ToString("dd.MM.yyyy HH:mm") });
+            var user = _context.Users.Find(userId);
+            return Json(new { success = true, UserName = user?.UserName ?? "Anonim", content = answer.Content, date = answer.CreatedDate.ToString("dd.MM.yyyy HH:mm") });
+        }
+
+        // --- DÜZENLEME VE RAPORLAMA ---
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            var question = _questionRepo.GetById(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin"))) return Forbid();
+            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", question.CategoryId);
+            return View(question);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult Edit(Question model)
+        {
+            var question = _questionRepo.GetById(model.Id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin"))) return Forbid();
+            if (ModelState.IsValid)
+            {
+                question.Title = model.Title;
+                question.Content = model.Content;
+                question.CategoryId = model.CategoryId;
+                _questionRepo.Update(question);
+                return RedirectToAction("Details", new { id = question.Id });
+            }
+            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", model.CategoryId);
+            return View(model);
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> ReportAjax(int? questionId, int? answerId, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason)) return Json(new { success = false, message = "Neden belirtiniz." });
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var report = new Report { ReporterUserId = userId, QuestionId = questionId, AnswerId = answerId, Reason = reason, CreatedDate = DateTime.Now };
+            _context.Reports.Add(report);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Bildirim iletildi." });
         }
 
         [Authorize(Roles = "Admin,MainAdmin")]
@@ -149,78 +174,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             var question = _questionRepo.GetById(id);
             if (question != null) _questionRepo.Delete(question);
             return RedirectToAction("Index", "Home");
-        }
-
-        [Authorize(Roles = "Admin,MainAdmin")]
-        public IActionResult DeleteAnswer(int id)
-        {
-            var answer = _answerRepo.GetById(id);
-            if (answer != null)
-            {
-                int questionId = answer.QuestionId;
-                _answerRepo.Delete(answer);
-                return RedirectToAction("Details", new { id = questionId });
-            }
-            return RedirectToAction("Index", "Home");
-        }
-        [Authorize]
-        [HttpGet]
-        [Authorize]
-        public IActionResult Edit(int id)
-        {
-            var question = _questionRepo.GetById(id);
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin")))
-                return Forbid();
-
-            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", question.CategoryId);
-            return View(question);
-        }
-
-        // Soru Düzenleme İşlemi (POST)
-        [Authorize]
-        [HttpPost]
-        public IActionResult Edit(Question model)
-        {
-            var question = _questionRepo.GetById(model.Id);
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin")))
-                return Forbid();
-
-            question.Title = model.Title;
-            question.Content = model.Content;
-            question.CategoryId = model.CategoryId;
-
-            _questionRepo.Update(question); //
-            TempData["Success"] = "Soru güncellendi.";
-            return RedirectToAction("Details", new { id = question.Id });
-        }
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> ReportAjax(int? questionId, int? answerId, string reason)
-        {
-            if (string.IsNullOrWhiteSpace(reason))
-                return Json(new { success = false, message = "Raporlama nedeni boş bırakılamaz." });
-
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false });
-
-            var report = new Report
-            {
-                ReporterUserId = int.Parse(userIdStr),
-                QuestionId = questionId,
-                AnswerId = answerId,
-                Reason = reason,
-                Status = ReportStatus.Beklemede,
-                CreatedDate = DateTime.Now
-            };
-
-            _context.Reports.Add(report);
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "Bildiriminiz yönetime iletildi. Teşekkürler." });
         }
     }
 }
