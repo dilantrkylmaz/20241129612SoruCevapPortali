@@ -129,23 +129,20 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(p.Id.ToString());
             if (user != null)
             {
-                user.FirstName = p.FirstName;
-                user.LastName = p.LastName;
-                user.UserName = p.UserName;
+                // Boş gönderilirse eski değerini koruyarak null hatasını engelliyoruz
+                user.FirstName = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : user.FirstName;
+                user.LastName = !string.IsNullOrEmpty(p.LastName) ? p.LastName : user.LastName;
                 user.Email = p.Email;
-                user.PhoneNumber = p.PhoneNumber;
+                user.UserName = p.Email; // UserName ile Email'i eşit tutmak Identity için sağlıklıdır
 
-                if (!string.IsNullOrEmpty(p.Password))
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
                 {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    await _userManager.ResetPasswordAsync(user, token, p.Password);
+                    TempData["Success"] = "Kullanıcı güncellendi.";
+                    return RedirectToAction("Index");
                 }
-
-                await _userManager.UpdateAsync(user);
-                TempData["Success"] = "Kullanıcı bilgileri başarıyla güncellendi.";
             }
-
-            return RedirectToAction("Index");
+            return View(p);
         }
     }
 }

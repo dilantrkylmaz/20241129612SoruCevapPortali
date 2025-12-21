@@ -2,16 +2,12 @@
 @{
     ViewData["Title"] = "Profilim";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
-    string resimUrl = string.IsNullOrEmpty(Model.ProfileImageUrl)
-        ? $"https://ui-avatars.com/api/?name={Model.UserName}&size=128&background=random"
-        : Model.ProfileImageUrl;
 }
 
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card card-primary card-outline">
             <div class="card-body box-profile">
-
                 <div class="text-center">
                     <img class="profile-user-img img-fluid img-circle"
                          src="@(!string.IsNullOrEmpty(Model.ProfileImageUrl) ? Model.ProfileImageUrl : "/img/default-user.png")"
@@ -19,45 +15,54 @@
                          style="width: 128px; height: 128px; object-fit: cover;">
                 </div>
 
-                <h3 class="profile-UserName text-center">@Model.UserName</h3>
-                <p class="text-muted text-center">
-                    @(Model.Role == "MainAdmin" ? "👑 Ana Yönetici" : "Yönetici")
-                </p>
+                <h3 class="profile-username text-center">@Model.FirstName @Model.LastName</h3>
+                <p class="text-muted text-center">@Model.UserName (@Model.Role)</p>
 
                 @if (TempData["Success"] != null)
                 {
                     <div class="alert alert-success">@TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">@TempData["Error"]</div>
                 }
 
                 <form asp-action="Index" method="post" enctype="multipart/form-data" class="mt-4">
                     <input type="hidden" asp-for="Id" />
 
                     <div class="form-group row">
-                        <label class="col-sm-3 col-form-label">Kullanıcı Adı</label>
+                        <label class="col-sm-3 col-form-label">Adınız</label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control" value="@Model.UserName" disabled>
-                            <small class="text-muted">Güvenlik gereği kullanıcı adı değiştirilemez.</small>
+                            <input type="text" asp-for="FirstName" class="form-control" required>
                         </div>
                     </div>
 
                     <div class="form-group row">
-                        <label class="col-sm-3 col-form-label">Şifre</label>
+                        <label class="col-sm-3 col-form-label">Soyadınız</label>
                         <div class="col-sm-9">
-                            <input type="text" asp-for="Password" class="form-control" required>
+                            <input type="text" asp-for="LastName" class="form-control" required>
                         </div>
                     </div>
 
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label">E-Posta</label>
                         <div class="col-sm-9">
-                            <input type="email" asp-for="Email" class="form-control" placeholder="ornek@email.com">
+                            <input type="email" asp-for="Email" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-3 col-form-label">Şifre</label>
+                        <div class="col-sm-9">
+                            <input type="text" name="newPassword" class="form-control" placeholder="Değiştirmek istemiyorsanız boş bırakın">
+                            <small class="text-muted">Şifre en az 3 karakter olmalıdır.</small>
                         </div>
                     </div>
 
                     <div class="form-group row">
                         <label class="col-sm-3 col-form-label">Telefon</label>
                         <div class="col-sm-9">
-                            <input type="text" asp-for="PhoneNumber" class="form-control" placeholder="0555 555 55 55">
+                            <input type="text" asp-for="PhoneNumber" class="form-control">
                         </div>
                     </div>
 

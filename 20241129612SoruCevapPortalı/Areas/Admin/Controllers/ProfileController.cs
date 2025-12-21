@@ -22,6 +22,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            // "UserId" yerine NameIdentifier kullanıldı
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account", new { area = "" });
 
@@ -37,11 +38,12 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
             if (user != null)
             {
-                user.FirstName = p.FirstName;
-                user.LastName = p.LastName;
-                user.Email = p.Email;
+                // Boş gelirse eski veriyi koru (NULL hatasını bu engeller)
+                user.FirstName = !string.IsNullOrEmpty(p.FirstName) ? p.FirstName : user.FirstName;
+                user.LastName = !string.IsNullOrEmpty(p.LastName) ? p.LastName : user.LastName;
                 user.PhoneNumber = p.PhoneNumber;
 
+                // Şifre güncelleme mantığı
                 if (!string.IsNullOrEmpty(p.Password))
                 {
                     var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -50,26 +52,15 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 
                 if (profileImage != null)
                 {
-                    string extension = Path.GetExtension(profileImage.FileName);
-                    string newImageName = "user_" + user.Id + "_" + Guid.NewGuid() + extension;
-                    string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "profiles");
-
-                    if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                    using (var stream = new FileStream(Path.Combine(folderPath, newImageName), FileMode.Create))
-                    {
-                        await profileImage.CopyToAsync(stream);
-                    }
+                    string newImageName = "user_" + Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
+                    string path = Path.Combine(_webHostEnvironment.WebRootPath, "img/profiles", newImageName);
+                    using (var stream = new FileStream(path, FileMode.Create)) { await profileImage.CopyToAsync(stream); }
                     user.ProfileImageUrl = "/img/profiles/" + newImageName;
                 }
 
-                var result = await _userManager.UpdateAsync(user);
-                if (result.Succeeded)
-                {
-                    TempData["Success"] = "Profil başarıyla güncellendi.";
-                }
+                await _userManager.UpdateAsync(user);
+                TempData["Success"] = "Profil başarıyla güncellendi.";
             }
-
             return RedirectToAction("Index");
         }
     }
