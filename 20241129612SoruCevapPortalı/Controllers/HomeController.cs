@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq;
 
 namespace _20241129612SoruCevapPortalı.Controllers
 {
     public class HomeController : Controller
     {
         private readonly IRepository<Question> _questionRepo;
-        private readonly IRepository<Category> _categoryRepo; // Kategori repo eklendi
+        private readonly IRepository<Category> _categoryRepo;
         private readonly AppDbContext _context;
 
         public HomeController(IRepository<Question> questionRepo, IRepository<Category> categoryRepo, AppDbContext context)
@@ -18,62 +19,65 @@ namespace _20241129612SoruCevapPortalı.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string search, int? categoryId, string sortBy, string period = "all")
+        public IActionResult Index(string search, int? categoryId, string sortBy, string period = "all", int page = 1)
         {
-            // Tüm soruları ilişkili verileriyle çekiyoruz
-            var questions = _questionRepo.GetAll(x => x.Category, y => y.User, z => z.Answers, l => l.QuestionLikes).AsEnumerable();
+            int pageSize = 5;
 
-            // 1. Arama Filtresi (Başlık veya İçerik)
+            // Repository List döndürdüğü için .AsEnumerable() ile LINQ işlemlerine açıyoruz
+            IEnumerable<Question> query = _questionRepo.GetAll(x => x.Category, y => y.User, z => z.Answers, l => l.QuestionLikes).AsEnumerable();
+
+            // 1. Arama Filtresi
             if (!string.IsNullOrEmpty(search))
             {
-                search = search.ToLower();
-                questions = questions.Where(q => q.Title.ToLower().Contains(search) || q.Content.ToLower().Contains(search));
+                string s = search.ToLower();
+                query = query.Where(q => q.Title.ToLower().Contains(s) || q.Content.ToLower().Contains(s));
             }
 
             // 2. Kategori Filtresi
             if (categoryId.HasValue && categoryId > 0)
             {
-                questions = questions.Where(q => q.CategoryId == categoryId);
+                query = query.Where(q => q.CategoryId == categoryId);
             }
 
-            // 3. Sıralama Mantığı
-            questions = sortBy switch
+            // 3. Sıralama Mantığı (IEnumerable üzerinden güvenli atama)
+            query = sortBy switch
             {
-                "oldest" => questions.OrderBy(q => q.CreatedDate),
-                "alpha" => questions.OrderBy(q => q.Title),
-                "alpha-desc" => questions.OrderByDescending(q => q.Title),
-                _ => questions.OrderByDescending(q => q.CreatedDate) // Varsayılan: En Yeni
+                "oldest" => query.OrderBy(q => q.CreatedDate),
+                "alpha" => query.OrderBy(q => q.Title),
+                "alpha-desc" => query.OrderByDescending(q => q.Title),
+                _ => query.OrderByDescending(q => q.CreatedDate)
             };
 
-            // Sidebar: Popüler Sorular Mantığı (Mevcut yapıyı koruyoruz)
+            int totalQuestions = query.Count();
+
+            // 4. Sayfalama (Madde 5)
+            var paginatedQuestions = query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            // Sidebar: Popüler Sorular
             DateTime filterDate = period switch
             {
                 "day" => DateTime.Now.AddDays(-1),
                 "week" => DateTime.Now.AddDays(-7),
                 "month" => DateTime.Now.AddMonths(-1),
-                "year" => DateTime.Now.AddYears(-1),
                 _ => DateTime.MinValue
             };
 
-            var allQuestionsForPopular = _questionRepo.GetAll(x => x.QuestionLikes);
-            ViewBag.PopularQuestions = allQuestionsForPopular
+            ViewBag.PopularQuestions = _questionRepo.GetAll(x => x.QuestionLikes)
                 .Where(x => x.CreatedDate >= filterDate)
                 .OrderByDescending(x => x.QuestionLikes?.Count ?? 0)
                 .Take(5).ToList();
 
-            // View tarafı için kategorileri hazırlıyoruz
-            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", categoryId);
-
-            // Mevcut filtre değerlerini View'a geri gönderiyoruz (inputlarda kalması için)
+            ViewBag.Categories = new SelectList(_categoryRepo.GetAll().ToList(), "Id", "Name", categoryId);
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentSort = sortBy;
+            ViewBag.SelectedCategory = categoryId;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalQuestions / pageSize);
 
-            return View(questions.ToList());
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
+            return View(paginatedQuestions);
         }
     }
 }

@@ -2,18 +2,22 @@
 using Microsoft.AspNetCore.Mvc;
 using _20241129612SoruCevapPortalı.Models;
 using _20241129612SoruCevapPortalı.Repositories.Abstract;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin,MainAdmin")] 
+    [Authorize(Roles = "Admin,MainAdmin")]
     public class CategoryController : Controller
     {
         private readonly IRepository<Category> _categoryRepo;
+        private readonly AppDbContext _context; // DÜZELTME: Veritabanı context'i eklendi
 
-        public CategoryController(IRepository<Category> categoryRepo)
+        public CategoryController(IRepository<Category> categoryRepo, AppDbContext context)
         {
             _categoryRepo = categoryRepo;
+            _context = context; // DÜZELTME: Context constructor üzerinden enjekte edildi
         }
 
         public IActionResult Index()
@@ -50,9 +54,9 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                                 .ToList();
 
             string hataListesi = string.Join("\n- ", hataMesajlari);
-
             return Content($"DOĞRULAMA (VALIDATION) HATASI VAR! Kayıt yapılmadı.\n\nSebepler:\n- {hataListesi}");
         }
+
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -66,24 +70,32 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _categoryRepo.Update(p); 
+                _categoryRepo.Update(p);
                 return RedirectToAction("Index");
             }
             return View(p);
         }
 
-        [HttpPost]
-        public IActionResult DeleteAjax(int id)
+        [Authorize(Roles = "Admin,MainAdmin")]
+        public IActionResult Delete(int id)
         {
+            // Kategoriye bağlı soru var mı kontrolü (Güvenlik Maddesi)
+            // Artık _context nesnesi yukarıda tanımlandığı için bu satır hata vermeyecektir.
+            bool hasQuestions = _context.Questions.Any(q => q.CategoryId == id);
+
+            if (hasQuestions)
+            {
+                TempData["Error"] = "Bu kategoriye ait sorular olduğu için silemezsiniz! Önce soruları başka kategoriye taşıyın veya silin.";
+                return RedirectToAction("Index");
+            }
+
             var category = _categoryRepo.GetById(id);
             if (category != null)
             {
                 _categoryRepo.Delete(category);
-
-                return Json(new { success = true, message = "Kategori başarıyla silindi." });
+                TempData["Success"] = "Kategori başarıyla silindi.";
             }
-
-            return Json(new { success = false, message = "Kategori bulunamadı!" });
+            return RedirectToAction("Index");
         }
     }
 }

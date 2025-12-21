@@ -1,4 +1,6 @@
 ﻿@model List<_20241129612SoruCevapPortalı.Models.Question>
+@using System.Security.Claims @* HATAYI ÇÖZEN KRİTİK SATIR *@
+
 @{
     ViewData["Title"] = "Ana Sayfa";
     string[] renkler = { "primary", "success", "danger", "warning", "info", "dark" };
@@ -54,7 +56,6 @@
             <a asp-controller="Question" asp-action="Create" class="list-group-item list-group-item-action text-success fw-bold">
                 <i class="fas fa-plus-circle me-2"></i>Soru Sor
             </a>
-            @* DÜZELTİLEN SATIR BURASI: string.IsNullOrEmpty kontrolü eklendi *@
             <a asp-action="Index" class="list-group-item list-group-item-action @(ViewBag.CurrentSort == null && string.IsNullOrEmpty(ViewBag.CurrentSearch) ? "active" : "")">
                 <i class="fas fa-list me-2"></i>Tüm Sorular
             </a>
@@ -99,6 +100,14 @@
                                 <i class="fas fa-user me-1"></i><strong>@(item.User != null ? item.User.UserName : "Anonim")</strong>
                             </small>
                             <div class="btn-group">
+                                @* DÜZENLE BUTONU: Yetki kontrolü artık hata vermeyecek *@
+                                @if (User.Identity.IsAuthenticated && (item.UserId.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier) || User.IsInRole("Admin") || User.IsInRole("MainAdmin")))
+                                {
+                                    <a asp-controller="Question" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-2">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </a>
+                                }
+
                                 <span class="btn btn-sm btn-light disabled text-primary border-0 me-2">
                                     <i class="fas fa-thumbs-up me-1"></i>@(item.QuestionLikes?.Count ?? 0)
                                 </span>
@@ -117,6 +126,20 @@
                 <i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>
                 Aradığınız kriterlere uygun soru bulunamadı.
             </div>
+        }
+
+        @if (ViewBag.TotalPages > 1)
+        {
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { page = i, search = ViewBag.CurrentSearch, categoryId = ViewBag.SelectedCategory, sortBy = ViewBag.CurrentSort })">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
         }
     </div>
 </div>

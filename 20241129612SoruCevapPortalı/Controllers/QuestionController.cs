@@ -163,5 +163,64 @@ namespace _20241129612SoruCevapPortalı.Controllers
             }
             return RedirectToAction("Index", "Home");
         }
+        [Authorize]
+        [HttpGet]
+        [Authorize]
+        public IActionResult Edit(int id)
+        {
+            var question = _questionRepo.GetById(id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin")))
+                return Forbid();
+
+            ViewBag.Categories = new SelectList(_categoryRepo.GetAll(), "Id", "Name", question.CategoryId);
+            return View(question);
+        }
+
+        // Soru Düzenleme İşlemi (POST)
+        [Authorize]
+        [HttpPost]
+        public IActionResult Edit(Question model)
+        {
+            var question = _questionRepo.GetById(model.Id);
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (question == null || (question.UserId != userId && !User.IsInRole("Admin") && !User.IsInRole("MainAdmin")))
+                return Forbid();
+
+            question.Title = model.Title;
+            question.Content = model.Content;
+            question.CategoryId = model.CategoryId;
+
+            _questionRepo.Update(question); //
+            TempData["Success"] = "Soru güncellendi.";
+            return RedirectToAction("Details", new { id = question.Id });
+        }
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> ReportAjax(int? questionId, int? answerId, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+                return Json(new { success = false, message = "Raporlama nedeni boş bırakılamaz." });
+
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdStr)) return Json(new { success = false });
+
+            var report = new Report
+            {
+                ReporterUserId = int.Parse(userIdStr),
+                QuestionId = questionId,
+                AnswerId = answerId,
+                Reason = reason,
+                Status = ReportStatus.Beklemede,
+                CreatedDate = DateTime.Now
+            };
+
+            _context.Reports.Add(report);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Bildiriminiz yönetime iletildi. Teşekkürler." });
+        }
     }
 }

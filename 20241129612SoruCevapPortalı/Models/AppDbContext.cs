@@ -14,6 +14,8 @@ namespace _20241129612SoruCevapPortalı.Models
         public DbSet<QuestionLike> QuestionLikes { get; set; }
         public DbSet<AnswerLike> AnswerLikes { get; set; }
 
+        public DbSet<Report> Reports { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -58,6 +60,12 @@ namespace _20241129612SoruCevapPortalı.Models
                     .WithMany()
                     .HasForeignKey(x => x.UserId)
                     .OnDelete(DeleteBehavior.NoAction);
+            });
+            modelBuilder.Entity<Report>(entity =>
+            {
+                entity.HasOne(r => r.ReporterUser).WithMany().HasForeignKey(r => r.ReporterUserId).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(r => r.Question).WithMany().HasForeignKey(r => r.QuestionId).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(r => r.Answer).WithMany().HasForeignKey(r => r.AnswerId).OnDelete(DeleteBehavior.NoAction);
             });
         }
     }

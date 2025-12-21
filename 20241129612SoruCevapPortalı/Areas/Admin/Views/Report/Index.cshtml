@@ -1,0 +1,75 @@
+﻿@model List<_20241129612SoruCevapPortalı.Models.Report>
+@{
+    ViewData["Title"] = "Rapor Yönetimi";
+    Layout = "_AdminLayout";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 fw-bold"><i class="fas fa-flag me-2"></i>Gelen İçerik Raporları</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Raporlayan</th>
+                        <th>İçerik Tipi</th>
+                        <th>Neden</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@item.ReporterUser?.UserName</td>
+                            <td>
+                                @if (item.QuestionId != null)
+                                {
+                                    <span class="badge bg-primary">Soru</span>
+                                    <a href="/Question/Details/@item.QuestionId" target="_blank" class="ms-1 small text-decoration-none">Gör</a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">Cevap</span>
+                                    <a href="/Question/Details/@item.Answer?.QuestionId" target="_blank" class="ms-1 small text-decoration-none">Gör</a>
+                                }
+                            </td>
+                            <td><small>@item.Reason</small></td>
+                            <td>
+                                <select class="form-select form-select-sm status-select" data-id="@item.Id">
+                                    <option value="Beklemede" selected="@(item.Status == ReportStatus.Beklemede)">Beklemede</option>
+                                    <option value="İncelendi" selected="@(item.Status == ReportStatus.İncelendi)">İncelendi</option>
+                                    <option value="Reddedildi" selected="@(item.Status == ReportStatus.Reddedildi)">Reddedildi</option>
+                                </select>
+                            </td>
+                            <td>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Raporu silmek istediğine emin misin?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(".status-select").change(function() {
+            var id = $(this).data("id");
+            var val = $(this).val();
+            $.post("/Admin/Report/UpdateStatus", { id: id, status: val }, function(res) {
+                if(res.success) {
+                    alert("Durum güncellendi.");
+                }
+            });
+        });
+    </script>
+}
