@@ -29,35 +29,43 @@ namespace _20241129612SoruCevapPortalı.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            // Zorunlu alanları güncelliyoruz
+            // Temel bilgileri güncelle
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.PhoneNumber = model.PhoneNumber;
 
-            // Şifre güncelleme (Artık parametre ismiyle eşleşiyor)
+            // ŞİFRE GÜNCELLEME (Kesin Çözüm)
             if (!string.IsNullOrEmpty(newPassword))
             {
-                // PasswordHasher ile doğrudan nesne üzerindeki Hash'i güncelliyoruz
+                // ResetPasswordAsync yerine doğrudan Hash'i güncelliyoruz 
+                // Bu sayede UpdateAsync çalışırken eski şifre yeni şifreyi ezmez.
                 user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, newPassword);
             }
 
-            // Profil Resmi Yükleme Mantığı (View'da mevcut olduğu için eklendi)
+            // Profil Resmi İşlemleri
             if (profileImage != null)
             {
-                string fileName = Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
-                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles", fileName);
-                using (var stream = new FileStream(path, FileMode.Create)) { await profileImage.CopyToAsync(stream); }
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles");
+                if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+                string fileName = "user_" + user.Id + "_" + Guid.NewGuid() + Path.GetExtension(profileImage.FileName);
+                using (var stream = new FileStream(Path.Combine(path, fileName), FileMode.Create))
+                {
+                    await profileImage.CopyToAsync(stream);
+                }
                 user.ProfileImageUrl = "/img/profiles/" + fileName;
             }
 
+            // Veritabanına tek seferde kaydet
             var result = await _userManager.UpdateAsync(user);
+
             if (result.Succeeded)
             {
-                TempData["Success"] = "Profil bilgileriniz ve şifreniz başarıyla güncellendi.";
+                TempData["Success"] = "Profiliniz ve şifreniz başarıyla güncellendi.";
             }
             else
             {
-                TempData["Error"] = "Güncelleme sırasında bir hata oluştu.";
+                TempData["Error"] = "Bir hata oluştu: " + string.Join(", ", result.Errors.Select(x => x.Description));
             }
 
             return RedirectToAction("Index");

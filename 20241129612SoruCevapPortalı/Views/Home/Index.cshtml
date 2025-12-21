@@ -1,51 +1,77 @@
 ﻿@model List<_20241129612SoruCevapPortalı.Models.Question>
-
 @{
     ViewData["Title"] = "Ana Sayfa";
-
     string[] renkler = { "primary", "success", "danger", "warning", "info", "dark" };
     int sayac = 0;
 }
 
-<div class="p-5 mb-4 bg-primary text-white rounded-3 text-center shadow">
+<div class="p-4 mb-4 bg-primary text-white rounded-3 text-center shadow-sm">
+    <h2 class="fw-bold">Soru Cevap Portalı</h2>
+    <p>Aklındakini sor, topluluğa katkıda bulun!</p>
+</div>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <h1 class="display-5 fw-bold">
-            Hoş Geldin, <span class="text-capitalize">@User.Identity.Name</span>!
-        </h1>
-    }
-    else
-    {
-        <h1 class="display-5 fw-bold">Hoş Geldiniz!</h1>
-    }
+<div class="card mb-4 shadow-sm border-0 bg-light">
+    <div class="card-body">
+        <form asp-action="Index" method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Soru Ara</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Başlık veya içerik..." value="@ViewBag.CurrentSearch">
+                </div>
+            </div>
 
-    <p class="fs-4">Merak ettiklerinizi sorun, bildiklerinizi paylaşın.</p>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Kategori</label>
+                <select name="categoryId" class="form-select" asp-items="ViewBag.Categories">
+                    <option value="">Tüm Kategoriler</option>
+                </select>
+            </div>
 
-    <a asp-controller="Question" asp-action="Create" class="btn btn-warning btn-lg fw-bold px-4 shadow-sm">Hemen Soru Sor</a>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">Sıralama</label>
+                <select name="sortBy" class="form-select">
+                    <option value="newest" selected="@(ViewBag.CurrentSort == "newest")">En Yeni</option>
+                    <option value="oldest" selected="@(ViewBag.CurrentSort == "oldest")">En Eski</option>
+                    <option value="alpha" selected="@(ViewBag.CurrentSort == "alpha")">A'dan Z'ye</option>
+                    <option value="alpha-desc" selected="@(ViewBag.CurrentSort == "alpha-desc")">Z'den A'ya</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark w-100 fw-bold">
+                    <i class="fas fa-filter me-1"></i> Filtrele
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="row">
     <div class="col-md-3">
         <div class="list-group shadow-sm">
-            <div class="list-group-item bg-dark text-white fw-bold">Menü</div>
-
+            <div class="list-group-item bg-dark text-white fw-bold">Hızlı Erişim</div>
             <a asp-controller="Question" asp-action="Create" class="list-group-item list-group-item-action text-success fw-bold">
-                <i class="bi bi-plus-circle"></i> Soru Sor
+                <i class="fas fa-plus-circle me-2"></i>Soru Sor
             </a>
-
-            <a href="#" class="list-group-item list-group-item-action active" onclick="return false;">
-                Tüm Sorular
+            @* DÜZELTİLEN SATIR BURASI: string.IsNullOrEmpty kontrolü eklendi *@
+            <a asp-action="Index" class="list-group-item list-group-item-action @(ViewBag.CurrentSort == null && string.IsNullOrEmpty(ViewBag.CurrentSearch) ? "active" : "")">
+                <i class="fas fa-list me-2"></i>Tüm Sorular
             </a>
-        </div>
-
-        <div class="alert alert-info mt-3 text-center shadow-sm small">
-            Topluluk kurallarına uymayı unutmayın.
         </div>
     </div>
 
     <div class="col-md-9">
-        <h3 class="mb-3">Son Paylaşımlar</h3>
+        <h4 class="mb-3 text-secondary">
+            @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+            {
+                <span>"@ViewBag.CurrentSearch" için arama sonuçları</span>
+            }
+            else
+            {
+                <span>Son Paylaşılan Sorular</span>
+            }
+        </h4>
 
         @if (Model != null && Model.Count > 0)
         {
@@ -60,25 +86,26 @@
                             <span class="badge bg-@aktifRenk rounded-pill">
                                 @(item.Category != null ? item.Category.Name : "Genel")
                             </span>
-                            <small class="text-muted">@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
+                            <small class="text-muted"><i class="far fa-clock me-1"></i>@item.CreatedDate.ToString("dd.MM.yyyy HH:mm")</small>
                         </div>
 
-                        <h5 class="card-title fw-bold text-dark">
-                            @item.Title
-                        </h5>
-
+                        <h5 class="card-title fw-bold text-dark">@item.Title</h5>
                         <p class="card-text text-secondary">
-                            @item.Content
+                            @(item.Content.Length > 150 ? item.Content.Substring(0, 150) + "..." : item.Content)
                         </p>
 
                         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                            <small class="text-muted fw-bold">
-                                Yazar: <span class="text-capitalize">@(item.User != null ? item.User.Id : "Anonim")</span>
+                            <small class="text-muted">
+                                <i class="fas fa-user me-1"></i><strong>@(item.User != null ? item.User.UserName : "Anonim")</strong>
                             </small>
-
-                            <a asp-controller="Question" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-@aktifRenk btn-sm px-3 fw-bold">
-                                Cevapları Gör
-                            </a>
+                            <div class="btn-group">
+                                <span class="btn btn-sm btn-light disabled text-primary border-0 me-2">
+                                    <i class="fas fa-thumbs-up me-1"></i>@(item.QuestionLikes?.Count ?? 0)
+                                </span>
+                                <a asp-controller="Question" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-@aktifRenk btn-sm px-3 fw-bold">
+                                    Cevapları Gör
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,8 +113,9 @@
         }
         else
         {
-            <div class="alert alert-warning text-center shadow-sm">
-                Henüz hiç soru sorulmamış. İlk soruyu sen sor!
+            <div class="alert alert-warning text-center shadow-sm py-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i><br>
+                Aradığınız kriterlere uygun soru bulunamadı.
             </div>
         }
     </div>
