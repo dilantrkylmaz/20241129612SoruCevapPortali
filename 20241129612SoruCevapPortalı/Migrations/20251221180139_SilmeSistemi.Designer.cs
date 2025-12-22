@@ -15,7 +15,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
     [Migration("20251221180139_silmeyönetim")]
     partial class silmeyönetim
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

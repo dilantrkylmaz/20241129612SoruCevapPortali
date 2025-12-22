@@ -26,7 +26,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(User p)
         {
-            // Kullanıcı adını veya e-postayı kontrol ederek kullanıcıyı buluyoruz
             var user = await _userManager.FindByNameAsync(p.UserName) ?? await _userManager.FindByEmailAsync(p.UserName);
 
             if (user != null)
@@ -52,8 +51,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(User model, IFormFile? profileImage)
         {
-            // DÜZELTME: model.UserName = model.Email satırı kaldırıldı. 
-            // Kullanıcı adı artık View'dan (formdan) gelen değer olacak.
 
             if (profileImage != null)
             {
@@ -84,7 +81,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return View(model);
         }
 
-        // --- ŞİFRE SIFIRLAMA METOTLARI ---
 
         [HttpGet]
         public IActionResult ForgotPassword() => View();

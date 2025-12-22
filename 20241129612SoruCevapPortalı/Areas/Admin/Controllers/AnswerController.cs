@@ -19,7 +19,9 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult Index(string searchQuestion, string searchUser)
         {
-            var answers = _repo.GetAll(x => x.User, x => x.Question);
+            var answers = _repo.GetAll(x => x.User, x => x.Question)
+                   .OrderByDescending(x => x.Id)
+                   .ToList();
 
             if (!string.IsNullOrEmpty(searchQuestion))
             {

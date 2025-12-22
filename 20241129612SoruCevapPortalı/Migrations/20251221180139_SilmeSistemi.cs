@@ -8,7 +8,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // 1. SORU SİLİNDİĞİNDE TEMİZLİK
             migrationBuilder.Sql(@"
                 CREATE TRIGGER TR_FullDeleteQuestion ON Questions INSTEAD OF DELETE AS BEGIN
                     SET NOCOUNT ON;
@@ -21,7 +20,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     DELETE FROM Questions WHERE Id = @QId;
                 END");
 
-            // 2. CEVAP SİLİNDİĞİNDE TEMİZLİK (Hata veren yer burasıydı, eklendi!)
             migrationBuilder.Sql(@"
                 CREATE TRIGGER TR_FullDeleteAnswer ON Answers INSTEAD OF DELETE AS BEGIN
                     SET NOCOUNT ON;
@@ -31,7 +29,6 @@ namespace _20241129612SoruCevapPortalı.Migrations
                     DELETE FROM Answers WHERE Id = @AId;
                 END");
 
-            // 3. KULLANICI SİLİNDİĞİNDE TEMİZLİK
             migrationBuilder.Sql(@"
                 CREATE TRIGGER TR_FullDeleteUser ON AspNetUsers INSTEAD OF DELETE AS BEGIN
                     SET NOCOUNT ON;

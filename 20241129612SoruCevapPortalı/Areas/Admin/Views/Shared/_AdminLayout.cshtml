@@ -160,36 +160,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+  
     <script>
-        var connection = new signalR.HubConnectionBuilder().withUrl("/portalHub").build();
-        connection.on("ReceiveNotification", function (user, title) {
-            alert("Yeni Soru: " + user + " tarafından '" + title + "' başlığıyla bir soru soruldu!");
-            // İsterseniz burada toastr veya benzeri bir kütüphane ile daha şık bir bildirim yapabilirsiniz.
-        });
-        connection.start();
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-
-    <script>
-        // SignalR Hub bağlantısını oluştur (Program.cs'deki map edilen isimle aynı olmalı)
         var connection = new signalR.HubConnectionBuilder()
             .withUrl("/portalHub")
             .build();
 
-        // Sunucudan (Controller'dan) gelecek olan "ReceiveNotification" mesajını dinle
         connection.on("ReceiveNotification", function (user, title) {
-            // Yeni bir soru geldiğinde ekranda uyarı göster
-            // Not: Gerçek bir projede alert yerine Toastr gibi kütüphaneler daha şıktır.
             alert("BİLDİRİM: " + user + " isimli kullanıcı '" + title + "' başlıklı yeni bir soru sordu!");
         });
 
-        // Bağlantıyı başlat
         connection.start().then(function () {
-            console.log("SignalR bağlantısı başarıyla kuruldu.");
+            console.log("SignalR bağlantısı Admin panelinde aktif.");
         }).catch(function (err) {
             return console.error("SignalR bağlantı hatası: " + err.toString());
         });
     </script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

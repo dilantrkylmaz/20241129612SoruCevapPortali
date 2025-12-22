@@ -10,16 +10,13 @@ namespace _20241129612SoruCevapPortalı
 {
     public class Program
     {
-        // Metot imzası asenkron yapıya uygun hale getirildi
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Veritabanı bağlantısı
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // Identity yapılandırması
             builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
             {
                 options.Password.RequireDigit = false;
@@ -33,10 +30,8 @@ namespace _20241129612SoruCevapPortalı
 
             builder.Services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
-            // Program.cs içinde builder.Services kısmına ekleyin
             builder.Services.AddTransient<IEmailSender, _20241129612SoruCevapPortalı.Services.EmailSender>();
 
-            // Identity Cookie ayarları
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Account/Login";
@@ -76,7 +71,6 @@ namespace _20241129612SoruCevapPortalı
 
             app.MapHub<PortalHub>("/portalHub");
 
-            // Başlangıç Verileri (Seed Data) - Tamamen asenkron yapıldı
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -85,7 +79,6 @@ namespace _20241129612SoruCevapPortalı
                     var userManager = services.GetRequiredService<UserManager<User>>();
                     var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
 
-                    // 1. Rolleri oluştur
                     string[] roleNames = { "MainAdmin", "Admin", "Uye" };
                     foreach (var roleName in roleNames)
                     {
@@ -95,7 +88,6 @@ namespace _20241129612SoruCevapPortalı
                         }
                     }
 
-                    // 2. Admin kullanıcısını kontrol et
                     var adminUser = await userManager.FindByNameAsync("admin");
                     if (adminUser == null)
                     {
@@ -116,7 +108,6 @@ namespace _20241129612SoruCevapPortalı
                     }
                     else
                     {
-                        // Rol kontrolü asenkron yapıldı
                         if (!await userManager.IsInRoleAsync(adminUser, "MainAdmin"))
                         {
                             await userManager.AddToRoleAsync(adminUser, "MainAdmin");

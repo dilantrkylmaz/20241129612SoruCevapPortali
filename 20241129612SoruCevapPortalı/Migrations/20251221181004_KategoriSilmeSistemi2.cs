@@ -4,10 +4,8 @@
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
     public partial class KategoriSilmeSistemi2 : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"

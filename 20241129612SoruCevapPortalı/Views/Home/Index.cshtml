@@ -1,5 +1,5 @@
 ﻿@model List<_20241129612SoruCevapPortalı.Models.Question>
-@using System.Security.Claims @* HATAYI ÇÖZEN KRİTİK SATIR *@
+@using System.Security.Claims 
 
 @{
     ViewData["Title"] = "Ana Sayfa";
@@ -100,7 +100,6 @@
                                 <i class="fas fa-user me-1"></i><strong>@(item.User != null ? item.User.UserName : "Anonim")</strong>
                             </small>
                             <div class="btn-group">
-                                @* DÜZENLE BUTONU: Yetki kontrolü artık hata vermeyecek *@
                                 @if (User.Identity.IsAuthenticated && (item.UserId.ToString() == User.FindFirstValue(ClaimTypes.NameIdentifier) || User.IsInRole("Admin") || User.IsInRole("MainAdmin")))
                                 {
                                     <a asp-controller="Question" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning me-2">

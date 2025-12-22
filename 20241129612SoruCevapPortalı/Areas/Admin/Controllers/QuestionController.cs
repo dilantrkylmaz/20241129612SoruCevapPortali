@@ -13,20 +13,21 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
     {
         private readonly IRepository<Question> _repo;
         private readonly IRepository<Category> _catRepo;
-        private readonly IHubContext<PortalHub> _hubContext; // SignalR Context tanımlı
+        private readonly IHubContext<PortalHub> _hubContext; 
 
-        // Constructor'da hubContext parametre olarak eklenmeli ve atanmalı
         public QuestionController(IRepository<Question> repo, IRepository<Category> catRepo, IHubContext<PortalHub> hubContext)
         {
             _repo = repo;
             _catRepo = catRepo;
-            _hubContext = hubContext; // Atama işlemi yapıldı
+            _hubContext = hubContext; 
         }
 
         [HttpGet]
         public IActionResult Index(string search, int? categoryId, string searchUser)
         {
-            var questions = _repo.GetAll(x => x.User, x => x.Category, x => x.Answers);
+            var questions = _repo.GetAll(x => x.User, x => x.Category, x => x.Answers)
+                                 .OrderByDescending(x => x.Id)
+                                 .ToList();
 
             if (!string.IsNullOrEmpty(search))
             {
@@ -58,7 +59,7 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(questions);
         }
 
-        public async Task<IActionResult> Delete(int id) // Async yapıldı
+        public async Task<IActionResult> Delete(int id) 
         {
             var question = _repo.GetById(id);
             if (question != null)
@@ -66,8 +67,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 string deletedTitle = question.Title;
                 _repo.Delete(question);
 
-                // İsteğe bağlı: Soru silindiğinde de adminlere bildirim gidebilir
-                await _hubContext.Clients.All.SendAsync("ReceiveNotification", User.Identity.Name, deletedTitle + " (Soru Silindi)");
             }
             return RedirectToAction("Index");
         }

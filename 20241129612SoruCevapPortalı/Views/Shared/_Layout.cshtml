@@ -146,7 +146,6 @@
 <script>
     var connection = new hub連接.HubConnectionBuilder().withUrl("/portalHub").build();
     connection.on("ReceiveNotification", function (user, title) {
-        // İstersen burada 'toastr' kütüphanesi kullanabilirsin
         alert("Yeni Soru: " + user + " bir soru sordu: " + title);
     });
     connection.start();

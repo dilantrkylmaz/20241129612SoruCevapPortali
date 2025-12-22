@@ -30,7 +30,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             _webHostEnvironment = webHostEnvironment;
         }
 
-        // --- SORU OLUŞTURMA ---
 
         [Authorize]
         [HttpGet]
@@ -59,7 +58,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
                     p.UserId = int.Parse(userIdStr);
                     p.CreatedDate = DateTime.Now;
 
-                    // Opsiyonel Medya Yükleme
                     if (mediaFile != null)
                     {
                         p.ImageUrl = await SaveFile(mediaFile, "questions");
@@ -77,7 +75,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return View(p);
         }
 
-        // --- SORU DÜZENLEME (MEDYA DEĞİŞTİR/SİL) ---
 
         [Authorize]
         [HttpGet]
@@ -109,7 +106,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 question.Content = model.Content;
                 question.CategoryId = model.CategoryId;
 
-                // Medya Yönetimi
                 if (removeCurrentMedia) { question.ImageUrl = null; }
                 else if (newMedia != null) { question.ImageUrl = await SaveFile(newMedia, "questions"); }
 
@@ -120,7 +116,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return View(model);
         }
 
-        // --- CEVAP SİSTEMİ (RESİMLİ) ---
 
         [HttpPost]
         [Authorize]
@@ -159,7 +154,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return Json(new { success = true });
         }
 
-        // --- DETAYLAR VE POPÜLER SORULAR ---
 
         public IActionResult Details(int id)
         {
@@ -171,7 +165,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
             return View(question);
         }
 
-        // --- YARDIMCI METOTLAR ---
 
         private async Task<string> SaveFile(IFormFile file, string folder)
         {

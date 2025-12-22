@@ -23,23 +23,19 @@ namespace _20241129612SoruCevapPortalı.Controllers
         {
             int pageSize = 5;
 
-            // Repository List döndürdüğü için .AsEnumerable() ile LINQ işlemlerine açıyoruz
             IEnumerable<Question> query = _questionRepo.GetAll(x => x.Category, y => y.User, z => z.Answers, l => l.QuestionLikes).AsEnumerable();
 
-            // 1. Arama Filtresi
             if (!string.IsNullOrEmpty(search))
             {
                 string s = search.ToLower();
                 query = query.Where(q => q.Title.ToLower().Contains(s) || q.Content.ToLower().Contains(s));
             }
 
-            // 2. Kategori Filtresi
             if (categoryId.HasValue && categoryId > 0)
             {
                 query = query.Where(q => q.CategoryId == categoryId);
             }
 
-            // 3. Sıralama Mantığı (IEnumerable üzerinden güvenli atama)
             query = sortBy switch
             {
                 "oldest" => query.OrderBy(q => q.CreatedDate),
@@ -50,13 +46,11 @@ namespace _20241129612SoruCevapPortalı.Controllers
 
             int totalQuestions = query.Count();
 
-            // 4. Sayfalama (Madde 5)
             var paginatedQuestions = query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            // Sidebar: Popüler Sorular
             DateTime filterDate = period switch
             {
                 "day" => DateTime.Now.AddDays(-1),

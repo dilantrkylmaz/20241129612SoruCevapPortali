@@ -17,7 +17,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             _context = context;
         }
 
-        // Tüm raporları en yeni en üstte olacak şekilde listeler
         public IActionResult Index()
         {
             var reports = _context.Reports
@@ -29,7 +28,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(reports);
         }
 
-        // Raporun durumunu günceller (Örn: Beklemede -> İncelendi)
         [HttpPost]
         public async Task<IActionResult> UpdateStatus(int id, ReportStatus status)
         {
@@ -43,7 +41,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return Json(new { success = false });
         }
 
-        // Raporu tamamen siler
         public async Task<IActionResult> Delete(int id)
         {
             var report = await _context.Reports.FindAsync(id);

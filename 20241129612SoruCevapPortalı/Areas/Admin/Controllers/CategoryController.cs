@@ -67,27 +67,22 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             return View(p);
         }
 
-        // --- SİLME İŞLEMİ (DÜZELTİLDİ) ---
         [HttpPost]
         public IActionResult Delete(int id)
         {
             try
             {
-                // DÜZELTME: _repo yerine _categoryRepo kullanıldı
                 var category = _categoryRepo.GetById(id);
 
                 if (category == null)
                     return Json(new { success = false, message = "Kategori bulunamadı!" });
 
-                // Veritabanındaki Tetikleyici (Trigger) burada devreye girerek
-                // kategoriye bağlı soru, cevap ve beğenileri otomatik silecek.
                 _categoryRepo.Delete(category);
 
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
-                // Hatanın asıl nedenini yakalayıp ön yüze (JS) gönderiyoruz
                 var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return Json(new { success = false, message = "Veritabanı Hatası: " + errorMsg });
             }

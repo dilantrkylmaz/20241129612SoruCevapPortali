@@ -22,7 +22,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // "UserId" yerine NameIdentifier kullanıldı
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account", new { area = "" });
 
@@ -43,10 +42,8 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 user.Email = p.Email;
                 user.PhoneNumber = p.PhoneNumber;
 
-                // ŞİFRE DEĞİŞTİRME MANTIĞI (Düzeltildi)
                 if (!string.IsNullOrEmpty(newPassword))
                 {
-                    // ResetPasswordAsync yerine doğrudan nesne üzerindeki Hash'i güncelliyoruz
                     user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, newPassword);
                 }
 
@@ -58,7 +55,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                     user.ProfileImageUrl = "/img/profiles/" + fileName;
                 }
 
-                // Tek bir UpdateAsync ile hem profil hem şifre kaydedilir
                 var result = await _userManager.UpdateAsync(user);
 
                 if (result.Succeeded)

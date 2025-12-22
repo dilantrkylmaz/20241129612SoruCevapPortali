@@ -3,14 +3,11 @@
 @using System.Security.Claims
 
 @functions {
-    // İçerikteki linkleri ve YouTube videolarını işleyen fonksiyon
     public string FormatContent(string content)
     {
         if (string.IsNullOrEmpty(content)) return "";
-        // YouTube linklerini videoya çevirir
         var youtubeRegex = new Regex(@"https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)");
         content = youtubeRegex.Replace(content, "<div class='mt-2 ratio ratio-16x9'><iframe src='https://www.youtube.com/embed/$1' allowfullscreen></iframe></div>");
-        // Normal linkleri tıklanabilir yapar
         var linkRegex = new Regex(@"(?<!src=')(https?:\/\/[^\s]+)");
         content = linkRegex.Replace(content, "<a href='$1' target='_blank' class='text-decoration-none'>$1</a>");
         return content;
@@ -196,7 +193,6 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // --- BEĞENİ İŞLEMLERİ ---
             $(document).on("click", ".q-like-btn", function () {
                 var btn = $(this);
                 $.post("/Question/LikeQuestionAjax", { questionId: btn.data("id") }, function (res) {
@@ -217,7 +213,6 @@
                 });
             });
 
-            // --- YORUM DÜZENLEME MANTIĞI ---
             $(document).on("click", ".btn-edit-answer", function() {
                 $("#editAnsId").val($(this).data("id"));
                 $("#editAnsContent").val($(this).data("content"));
@@ -242,7 +237,6 @@
                 });
             });
 
-            // --- YORUM GÖNDERME MANTIĞI ---
             $("#btnSendAnswer").click(function () {
                 var formData = new FormData();
                 formData.append("Content", $("#txtAnswerContent").val());
@@ -258,7 +252,6 @@
                 });
             });
 
-            // --- RAPORLAMA ---
             $(document).on("click", ".btn-report", function() {
                 $("#reportQuestionId").val($(this).data("q-id") || "");
                 $("#reportAnswerId").val($(this).data("a-id") || "");

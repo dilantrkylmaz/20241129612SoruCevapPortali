@@ -22,17 +22,14 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Index(string search, string role)
         {
-            // 1. Kullanıcıları çekiyoruz
             var users = await _userManager.Users.ToListAsync();
 
-            // 2. Her kullanıcı için rolü manuel eşleştiriyoruz (KRİTİK ADIM)
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
-                user.Role = roles.FirstOrDefault() ?? "Uye"; // Eğer rolü yoksa varsayılan 'Uye'
+                user.Role = roles.FirstOrDefault() ?? "Uye"; 
             }
 
-            // 3. Arama filtresi (Roller yüklendikten sonra yapıyoruz)
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -44,7 +41,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
                 ).ToList();
             }
 
-            // 4. Rol filtresi
             if (!string.IsNullOrEmpty(role))
             {
                 users = users.Where(x => x.Role == role).ToList();
@@ -58,7 +54,6 @@ namespace _20241129612SoruCevapPortalı.Areas.Admin.Controllers
             var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
-                // Rol kontrolü yapabilmek için rolü yüklüyoruz
                 var roles = await _userManager.GetRolesAsync(user);
                 user.Role = roles.FirstOrDefault();
 

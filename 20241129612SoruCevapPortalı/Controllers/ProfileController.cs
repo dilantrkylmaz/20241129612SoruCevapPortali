@@ -17,7 +17,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Mevcut giriş yapmış kullanıcıyı Identity üzerinden güvenli şekilde getirir
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
             return View(user);
@@ -29,20 +28,15 @@ namespace _20241129612SoruCevapPortalı.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return NotFound();
 
-            // Temel bilgileri güncelle
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.PhoneNumber = model.PhoneNumber;
 
-            // ŞİFRE GÜNCELLEME (Kesin Çözüm)
             if (!string.IsNullOrEmpty(newPassword))
             {
-                // ResetPasswordAsync yerine doğrudan Hash'i güncelliyoruz 
-                // Bu sayede UpdateAsync çalışırken eski şifre yeni şifreyi ezmez.
                 user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, newPassword);
             }
 
-            // Profil Resmi İşlemleri
             if (profileImage != null)
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/img/profiles");
@@ -56,7 +50,6 @@ namespace _20241129612SoruCevapPortalı.Controllers
                 user.ProfileImageUrl = "/img/profiles/" + fileName;
             }
 
-            // Veritabanına tek seferde kaydet
             var result = await _userManager.UpdateAsync(user);
 
             if (result.Succeeded)

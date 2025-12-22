@@ -4,16 +4,13 @@
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
-    /// <inheritdoc />
     public partial class FixTriggerOutput : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
 
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
 
