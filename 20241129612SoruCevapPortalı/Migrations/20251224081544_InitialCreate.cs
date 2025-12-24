@@ -5,10 +5,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace _20241129612SoruCevapPortalı.Migrations
 {
+    /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // -----------------------------------------------------------
+            // 1. TABLO OLUŞTURMA İŞLEMLERİ (STANDART EF CORE KODLARI)
+            // -----------------------------------------------------------
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -399,48 +405,81 @@ namespace _20241129612SoruCevapPortalı.Migrations
                 name: "IX_Reports_ReporterUserId",
                 table: "Reports",
                 column: "ReporterUserId");
+
+            // -----------------------------------------------------------
+            // 2. TRIGGER (TETİKLEYİCİ) EKLEMELERİ (ÖZEL SQL KODLARI)
+            // -----------------------------------------------------------
+
+            // Soru silindiğinde bağlı verileri (cevaplar, beğeniler vb.) toplu siler
+            migrationBuilder.Sql(@"
+                CREATE TRIGGER TR_FullDeleteQuestion ON Questions INSTEAD OF DELETE AS BEGIN
+                    SET NOCOUNT ON;
+                    DELETE FROM AnswerLikes WHERE AnswerId IN (SELECT Id FROM Answers WHERE QuestionId IN (SELECT Id FROM deleted));
+                    DELETE FROM Reports WHERE AnswerId IN (SELECT Id FROM Answers WHERE QuestionId IN (SELECT Id FROM deleted));
+                    DELETE FROM QuestionLikes WHERE QuestionId IN (SELECT Id FROM deleted);
+                    DELETE FROM Reports WHERE QuestionId IN (SELECT Id FROM deleted);
+                    DELETE FROM Answers WHERE QuestionId IN (SELECT Id FROM deleted);
+                    DELETE FROM Questions WHERE Id IN (SELECT Id FROM deleted);
+                END");
+
+            // Cevap silindiğinde bağlı verileri siler
+            migrationBuilder.Sql(@"
+                CREATE TRIGGER TR_FullDeleteAnswer ON Answers INSTEAD OF DELETE AS BEGIN
+                    SET NOCOUNT ON;
+                    DELETE FROM AnswerLikes WHERE AnswerId IN (SELECT Id FROM deleted);
+                    DELETE FROM Reports WHERE AnswerId IN (SELECT Id FROM deleted);
+                    DELETE FROM Answers WHERE Id IN (SELECT Id FROM deleted);
+                END");
+
+            // Kullanıcı silindiğinde bağlı tüm verileri (sorular, cevaplar, beğeniler vb.) siler
+            migrationBuilder.Sql(@"
+                CREATE TRIGGER TR_FullDeleteUser ON AspNetUsers INSTEAD OF DELETE AS BEGIN
+                    SET NOCOUNT ON;
+                    DELETE FROM AnswerLikes WHERE UserId IN (SELECT Id FROM deleted);
+                    DELETE FROM QuestionLikes WHERE UserId IN (SELECT Id FROM deleted);
+                    DELETE FROM Reports WHERE ReporterUserId IN (SELECT Id FROM deleted);
+                    
+                    -- Kullanıcıya ait cevapları sil (Answer trigger'ını tetikler)
+                    DELETE FROM Answers WHERE UserId IN (SELECT Id FROM deleted);
+                    
+                    -- Kullanıcıya ait soruları sil (Question trigger'ını tetikler)
+                    DELETE FROM Questions WHERE UserId IN (SELECT Id FROM deleted);
+                    
+                    DELETE FROM AspNetUsers WHERE Id IN (SELECT Id FROM deleted);
+                END");
+
+            // Kategori silindiğinde içindeki soruları ve kategoriyi siler
+            migrationBuilder.Sql(@"
+                CREATE TRIGGER TR_FullDeleteCategory ON Categories INSTEAD OF DELETE AS BEGIN
+                    SET NOCOUNT ON;
+                    -- Kategorideki soruları sil (Question trigger'ını tetikler)
+                    DELETE FROM Questions WHERE CategoryId IN (SELECT Id FROM deleted);
+                    DELETE FROM Categories WHERE Id IN (SELECT Id FROM deleted);
+                END");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AnswerLikes");
+            // Trigger'ları önce kaldırıyoruz
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS TR_FullDeleteQuestion");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS TR_FullDeleteAnswer");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS TR_FullDeleteUser");
+            migrationBuilder.Sql("DROP TRIGGER IF EXISTS TR_FullDeleteCategory");
 
-            migrationBuilder.DropTable(
-                name: "AspNetRoleClaims");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserClaims");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserLogins");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserRoles");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUserTokens");
-
-            migrationBuilder.DropTable(
-                name: "QuestionLikes");
-
-            migrationBuilder.DropTable(
-                name: "Reports");
-
-            migrationBuilder.DropTable(
-                name: "AspNetRoles");
-
-            migrationBuilder.DropTable(
-                name: "Answers");
-
-            migrationBuilder.DropTable(
-                name: "Questions");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
+            migrationBuilder.DropTable(name: "AnswerLikes");
+            migrationBuilder.DropTable(name: "AspNetRoleClaims");
+            migrationBuilder.DropTable(name: "AspNetUserClaims");
+            migrationBuilder.DropTable(name: "AspNetUserLogins");
+            migrationBuilder.DropTable(name: "AspNetUserRoles");
+            migrationBuilder.DropTable(name: "AspNetUserTokens");
+            migrationBuilder.DropTable(name: "QuestionLikes");
+            migrationBuilder.DropTable(name: "Reports");
+            migrationBuilder.DropTable(name: "AspNetRoles");
+            migrationBuilder.DropTable(name: "Answers");
+            migrationBuilder.DropTable(name: "Questions");
+            migrationBuilder.DropTable(name: "AspNetUsers");
+            migrationBuilder.DropTable(name: "Categories");
         }
     }
 }
